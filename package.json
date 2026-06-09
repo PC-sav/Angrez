@@ -7,7 +7,11 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "rimraf dist && tsc",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/migrate.ts",
+    "migrate:undo": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/migrate.ts --down",
+    "migrate:status": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/migrate.ts --status",
+    "test": "vitest run"
   },
   "engines": {
     "node": ">=20"
@@ -17,15 +21,18 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "helmet": "^8.0.0"
+    "helmet": "^8.0.0",
+    "pg": "^8.13.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.9.0",
+    "@types/pg": "^8.11.10",
     "nodemon": "^3.1.7",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }
