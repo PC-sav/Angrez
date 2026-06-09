@@ -11,7 +11,7 @@
  */
 
 import "dotenv/config";
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, afterAll, afterEach } from "vitest";
 import request from "supertest";
 import pool from "../src/lib/db";
 import app from "../src/app";
@@ -86,6 +86,44 @@ describe("POST /api/auth/otp/request — rate limiting", () => {
       .send({ phone: "12345" });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("INVALID_PHONE");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Security: devOtp must never appear in production responses
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("POST /api/auth/otp/request — production security", () => {
+  const PROD_PHONE = `+916${String(TS + 4).slice(-9)}`;
+  const originalEnv = process.env.NODE_ENV;
+
+  afterEach(async () => {
+    process.env.NODE_ENV = originalEnv;
+    await pool.query("DELETE FROM otp_codes WHERE phone = $1", [PROD_PHONE]);
+  });
+
+  it("omits devOtp from the response when NODE_ENV=production", async () => {
+    process.env.NODE_ENV = "production";
+
+    const res = await request(app)
+      .post("/api/auth/otp/request")
+      .send({ phone: PROD_PHONE });
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.devOtp).toBeUndefined();
+  });
+
+  it("includes devOtp in the response when NODE_ENV=development", async () => {
+    process.env.NODE_ENV = "development";
+
+    const res = await request(app)
+      .post("/api/auth/otp/request")
+      .send({ phone: PROD_PHONE });
+
+    expect(res.status).toBe(200);
+    expect(typeof res.body.devOtp).toBe("string");
+    expect(res.body.devOtp).toHaveLength(6);
   });
 });
 
