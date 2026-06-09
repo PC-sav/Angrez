@@ -7,26 +7,34 @@ function required(key: string): string {
 }
 
 function optional(key: string, fallback = ""): string {
-  return process.env[key] ?? fallback;
+  const v = process.env[key];
+  return v != null && v !== "" ? v : fallback;
 }
 
 export const env = {
   nodeEnv: optional("NODE_ENV", "development"),
   port: parseInt(optional("PORT", "3000"), 10),
   appBaseUrl: optional("APP_BASE_URL", "http://localhost:3000"),
-  jwtSecret: optional("JWT_SECRET"),
-  jwtExpiresIn: optional("JWT_EXPIRES_IN", "7d"),
 
+  // JWT — required; startup will throw if unset
+  jwtSecret: required("JWT_SECRET"),
+  jwtExpiresIn: optional("JWT_EXPIRES_IN", "30d"),
+
+  // Supabase / Postgres
   supabaseUrl: optional("SUPABASE_URL"),
   supabaseAnonKey: optional("SUPABASE_ANON_KEY"),
   supabaseServiceRoleKey: optional("SUPABASE_SERVICE_ROLE_KEY"),
-  databaseUrl: optional("DATABASE_URL"),
+  databaseUrl: required("DATABASE_URL"),
 
-  googleOauthClientId: optional("GOOGLE_OAUTH_CLIENT_ID"),
-  googleOauthClientSecret: optional("GOOGLE_OAUTH_CLIENT_SECRET"),
+  // Google OAuth
+  googleClientId: optional("GOOGLE_CLIENT_ID"),
 
-  otpStubMode: optional("OTP_STUB_MODE", "true") === "true",
+  // SMS / OTP
+  smsProvider: optional("SMS_PROVIDER", "stub") as "stub" | "exotel",
   otpLength: parseInt(optional("OTP_LENGTH", "6"), 10),
   otpTtlSeconds: parseInt(optional("OTP_TTL_SECONDS", "300"), 10),
   otpMaxAttempts: parseInt(optional("OTP_MAX_ATTEMPTS", "5"), 10),
+  otpRateLimitCount: parseInt(optional("OTP_RATE_LIMIT_COUNT", "3"), 10),
+  otpRateLimitWindowMinutes: parseInt(optional("OTP_RATE_LIMIT_WINDOW_MINUTES", "15"), 10),
+  otpResendCooldownSeconds: parseInt(optional("OTP_RESEND_COOLDOWN_SECONDS", "30"), 10),
 } as const;
