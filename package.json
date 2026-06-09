@@ -11,6 +11,7 @@
     "migrate": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/migrate.ts",
     "migrate:undo": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/migrate.ts --down",
     "migrate:status": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/migrate.ts --status",
+    "seed:content": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/seed-content.ts",
     "test": "vitest run"
   },
   "engines": {

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { version } from "../../package.json";
 import authRouter from "./auth";
+import contentRouter from "./content";
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.get("/health", (_req: Request, res: Response) => {
 });
 
 router.use("/auth", authRouter);
+router.use("/content", contentRouter);
 
 export default router;
