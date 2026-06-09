@@ -1,0 +1,342 @@
+{
+  "_meta": {
+    "schema_version": "0.3",
+    "model": "conversational-exchange",
+    "note_for_team": "Angrez Stage 2 'Everyday Talk' v2. Changes from v1: (1) directions sub-stage removed (Google Maps made it redundant); (2) negotiation is now a real back-and-forth — counter-offers, follow-up questions/statements, and free add-on requests ('throw in some coriander'), built as CHAINED single-exchange role_play_turns so it feels multi-turn while staying inside the MVP single-exchange limit (true multi-turn is Phase 2); (3) two expressive sub-stages added — feelings/family check-in (2.6) and reviews/opinions (2.7) — a difficulty step up from transactions to saying how you feel and what you think. Two teach types: 'ask' (learner speaks first) and 'exchange' (prompt -> 3 natural responses). Speech is primary; 'fallback' is the no-mic path. All six MVP puzzle types appear. l1 = natural Devanagari, warm, never shaming. accept[] is forgiving.",
+    "design_rules": {
+      "responses_per_prompt": 3,
+      "negotiation": "Chain single-exchange turns to simulate haggling: ask price -> shopkeeper counters -> learner counters/follows up -> learner asks for a free add-on -> close. Accept any natural counter; never fail on word order if intent is clear.",
+      "expressive": "Feelings and opinions have no single 'right' answer — accept[] lists are wide and open_ended:true; the win is speaking a natural opinion, not matching a target.",
+      "indian_english": "Bargaining, free add-ons (dhania/chillies), autos, rupees, 'make it less', 'last price', 'na' — keep it real to Tier 2/3 daily life.",
+      "numbers": "Accept spoken number or digits in prices/fares."
+    },
+    "audio_convention": {
+      "english": "audio/en/<key>.mp3 — AI-TTS, native Indian-English + RP",
+      "hindi": "audio/hi/<key>.mp3 — Hindi prompts, AI-TTS",
+      "regenerable": true
+    },
+    "image_convention": "img/s2/<name>.webp — simple, clear, compressed.",
+    "images_needed_stage2": [
+      "img/s2/shop_vegetables.webp", "img/s2/coriander_chillies.webp", "img/s2/shopkeeper.webp",
+      "img/s2/bus_stop.webp", "img/s2/auto_rickshaw.webp", "img/s2/phone_call.webp",
+      "img/s2/tea_stall.webp", "img/s2/restaurant_table.webp", "img/s2/clock.webp",
+      "img/s2/home_evening.webp", "img/s2/cinema_ticket.webp"
+    ]
+  },
+
+  "pack": {
+    "stage": 2,
+    "version": 2,
+    "language": "hi",
+    "name_en": "Everyday Talk",
+    "name_l1": "रोज़ की बातचीत",
+    "description_l1": "दुकान का मोल-भाव, ऑटो, फ़ोन, खाना — और अपने मन की बात भी: दिन कैसा रहा, क्या पसंद आया। अब आप पूछना, मोल-भाव करना, और राय देना भी सीखेंगे।",
+    "mastery_threshold": 0.7,
+
+    "points": {
+      "puzzle_base": 5, "voice_bonus": 5, "bravery_bonus": 5,
+      "sub_stage_complete": 30, "sub_stage_perfect_bonus": 20, "daily_open": 2
+    },
+
+    "feedback": {
+      "celebrate_l1": ["शाबाश!", "बहुत बढ़िया!", "वाह, सही बोला!", "एकदम सही!"],
+      "heard_prefix_l1": "मैंने सुना",
+      "almost_l1": "लगभग सही! एक बार और बोलिए?",
+      "good_effort_l1": "अच्छी कोशिश! आपने बोला — यही तो असली बात है।",
+      "mic_broken_l1": "माइक थोड़ा सो रहा है! चलिए टाइप करते हैं। कोई बात नहीं।",
+      "noise_high_l1": "आसपास थोड़ा शोर है — टाइप करना है क्या?",
+      "silence_l1": "आराम से बोलिए, मैं सुन रहा हूँ।",
+      "ready_to_listen_l1": "सुनने के लिए तैयार"
+    },
+
+    "sub_stages": [
+      {
+        "id": "2.1",
+        "title_en": "Shopping & bargaining",
+        "title_l1": "ख़रीदारी और मोल-भाव",
+        "micro_skill_l1": "दाम पूछना, मोल-भाव करना (काउंटर देना, सवाल पूछना), और कुछ मुफ़्त माँगना — फिर सौदा पक्का करना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "बाज़ार में सिर्फ़ दाम पूछना काफ़ी नहीं — मोल-भाव, थोड़ा धनिया मुफ़्त, फिर सौदा। आज पूरी बातचीत सीखते हैं!", "audio": "audio/hi/s2_1_warmup.mp3" },
+        "teach": [
+          { "id": "ask_price_counter", "type": "ask", "goal_l1": "दाम पूछना और मोल-भाव (काउंटर) करना",
+            "phrases": [
+              { "en": "How much is this?", "l1": "यह कितने का है?", "register_l1": "शुरुआत — दाम पूछना।", "audio": "audio/en/how_much_is_this.mp3" },
+              { "en": "Can you make it forty?", "l1": "चालीस में दीजिए?", "register_l1": "अपना काउंटर देना — दाम बदलकर।", "audio": "audio/en/can_you_make_it_forty.mp3" },
+              { "en": "That's a bit too much.", "l1": "यह थोड़ा ज़्यादा है।", "register_l1": "महँगा बताकर मोल-भाव।", "audio": "audio/en/thats_a_bit_too_much.mp3" }
+            ]
+          },
+          { "id": "ask_followup_addon", "type": "ask", "goal_l1": "फ़ॉलो-अप सवाल और कुछ मुफ़्त माँगना",
+            "phrases": [
+              { "en": "Is it fresh?", "l1": "ताज़ा है ना?", "register_l1": "फ़ॉलो-अप सवाल।", "audio": "audio/en/is_it_fresh.mp3" },
+              { "en": "Add some coriander, please.", "l1": "थोड़ा धनिया डाल दीजिए।", "register_l1": "मुफ़्त में थोड़ा extra माँगना — बहुत आम।", "audio": "audio/en/add_some_coriander_please.mp3" },
+              { "en": "Throw in a few chillies?", "l1": "दो-चार मिर्ची भी दे दीजिए?", "register_l1": "हल्के अंदाज़ में मुफ़्त माँगना।", "audio": "audio/en/throw_in_a_few_chillies.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "2.1.p1", "type": "role_play_turn", "instruction_l1": "दुकानदार से दाम पूछिए — आप पहले बोलिए", "scenario_l1": "सब्ज़ी की दुकान। टमाटर की ओर इशारा।", "image": "img/s2/shop_vegetables.webp", "ai_line_en": "Yes, what would you like?", "ai_line_audio": "audio/en/yes_what_would_you_like.mp3", "accept": ["how much is this", "what's the price", "how much for the tomatoes", "how much"], "open_ended": true, "exchanges": 1, "hint_l1": "'How much is this?'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.1.p2", "type": "role_play_turn", "instruction_l1": "दाम सुना (50 रु/किलो) — काउंटर दीजिए या फ़ॉलो-अप पूछिए", "scenario_l1": "दुकानदार: 'Fifty rupees a kilo.'", "ai_line_en": "Fifty rupees a kilo.", "ai_line_audio": "audio/en/fifty_rupees_a_kilo.mp3", "accept": ["can you make it forty", "that's a bit too much", "is it fresh", "make it forty", "i'll give you forty", "too much"], "open_ended": true, "exchanges": 1, "hint_l1": "काउंटर: 'Can you make it forty?' या पूछिए 'Is it fresh?'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.1.p3", "type": "role_play_turn", "instruction_l1": "दुकानदार थोड़ा झुका (45) — अब कुछ मुफ़्त माँगिए", "scenario_l1": "दुकानदार: 'Okay, forty-five. That's my best.'", "ai_line_en": "Okay, forty-five. That's my best.", "ai_line_audio": "audio/en/okay_forty_five_thats_my_best.mp3", "accept": ["add some coriander please", "throw in a few chillies", "add some coriander", "okay add some coriander", "give some chillies", "okay but add some coriander"], "open_ended": true, "exchanges": 1, "hint_l1": "'Okay, but add some coriander, please.'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.1.p4", "type": "role_play_turn", "instruction_l1": "सौदा पक्का — हाँ कहकर ख़रीदिए", "scenario_l1": "दुकानदार: 'Done — forty-five with coriander.'", "ai_line_en": "Done — forty-five with coriander.", "ai_line_audio": "audio/en/done_forty_five_with_coriander.mp3", "accept": ["okay deal", "done", "i'll take it", "alright i'll take it", "okay thank you", "deal thank you"], "open_ended": true, "exchanges": 1, "hint_l1": "'Okay, deal!' या 'I'll take it.'", "post_feedback_l1": "वाह! आपने पूरा मोल-भाव किया — दाम पूछा, काउंटर दिया, धनिया मुफ़्त लिया, और सौदा पक्का किया। एकदम पक्के ग्राहक!", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.1.p5", "type": "sentence_builder", "instruction_l1": "शब्द जोड़कर काउंटर बोलिए", "target": "Can you make it forty?", "accept": ["can you make it forty"], "tiles": ["Can", "you", "make", "it", "forty"], "hint_l1": "क्या आप … चालीस … कर देंगे?", "fallback": { "type": "tiles" }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "2.1.p6", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए — मुफ़्त माँगना", "audio": "audio/en/add_some_coriander_please.mp3", "target": "Add some coriander, please.", "accept": ["add some coriander please", "add some coriander"], "pace": "slow", "hint_l1": "'ऐड सम कोरिएंडर, प्लीज़'", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "2.1.m1", "type": "role_play_turn", "instruction_l1": "दाम पूछिए", "ai_line_en": "Yes?", "accept": ["how much is this", "what's the price", "how much"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } },
+          { "id": "2.1.m2", "type": "role_play_turn", "instruction_l1": "काउंटर दीजिए", "ai_line_en": "Sixty rupees.", "accept": ["can you make it fifty", "that's a bit too much", "make it less", "too much"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } },
+          { "id": "2.1.m3", "type": "role_play_turn", "instruction_l1": "कुछ मुफ़्त माँगिए", "ai_line_en": "Okay, fifty-five, final.", "accept": ["add some coriander please", "throw in a few chillies", "add some coriander"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } },
+          { "id": "2.1.m4", "type": "sentence_builder", "instruction_l1": "पूरा सवाल बोलिए", "target": "Is it fresh?", "accept": ["is it fresh"], "tiles": ["Is", "it", "fresh"], "fallback": { "type": "tiles" } }
+        ],
+        "recap": { "message_l1": "अब आप पूरा मोल-भाव कर सकते हैं — काउंटर देना, ताज़ा पूछना, थोड़ा मुफ़्त माँगना, और सौदा पक्का करना!", "phrases_learned": ["How much is this?", "Can you make it forty?", "That's a bit too much.", "Is it fresh?", "Add some coriander, please.", "Okay, deal."] }
+      },
+
+      {
+        "id": "2.2",
+        "title_en": "Buying things",
+        "title_l1": "सामान ख़रीदना",
+        "micro_skill_l1": "सामान माँगना, 'और कुछ?' का जवाब देना, और विनम्रता से माँगना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "दुकान पर सामान माँगना — 'क्या है आपके पास?', 'यह दीजिए', 'बस इतना ही'। आज यही।", "audio": "audio/hi/s2_2_warmup.mp3" },
+        "teach": [
+          { "id": "ask_do_you_have", "type": "ask", "goal_l1": "सामान माँगना",
+            "phrases": [
+              { "en": "Do you have soap?", "l1": "क्या आपके पास साबुन है?", "register_l1": "'soap' की जगह कोई भी चीज़।", "audio": "audio/en/do_you_have_soap.mp3" },
+              { "en": "I'm looking for sugar.", "l1": "मुझे चीनी चाहिए।", "register_l1": "विनम्र।", "audio": "audio/en/im_looking_for_sugar.mp3" },
+              { "en": "Can I get one?", "l1": "एक मिल जाएगा?", "register_l1": "सहज माँगना।", "audio": "audio/en/can_i_get_one.mp3" }
+            ]
+          },
+          { "id": "ex_anything_else", "type": "exchange", "prompt_en": "Anything else?", "prompt_l1": "और कुछ?", "prompt_audio": "audio/en/anything_else.mp3",
+            "responses": [
+              { "en": "No, that's all.", "l1": "नहीं, बस इतना ही।", "register_l1": "सबसे आम।", "audio": "audio/en/no_thats_all.mp3" },
+              { "en": "Yes, also one more.", "l1": "हाँ, एक और भी।", "register_l1": "और चाहिए तो।", "audio": "audio/en/yes_also_one_more.mp3" },
+              { "en": "That's it, thanks.", "l1": "बस, धन्यवाद।", "register_l1": "ख़त्म करते हुए।", "audio": "audio/en/thats_it_thanks.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "2.2.p1", "type": "role_play_turn", "instruction_l1": "दुकानदार से पूछिए कि साबुन है क्या", "scenario_l1": "किराने की दुकान पर।", "image": "img/s2/shopkeeper.webp", "ai_line_en": "Hello, how can I help?", "ai_line_audio": "audio/en/hello_how_can_i_help.mp3", "accept": ["do you have soap", "i'm looking for soap", "can i get soap", "do you have soap please"], "open_ended": true, "exchanges": 1, "hint_l1": "'Do you have …?'", "post_feedback_l1": "बढ़िया! माँगना सबसे ज़रूरी हुनर है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.2.p2", "type": "listen_and_respond", "instruction_l1": "दुकानदार पूछ रहा है — जवाब बोलिए", "prompt_en": "Anything else?", "audio": "audio/en/anything_else.mp3", "accept": ["no that's all", "yes also one more", "that's it thanks", "no thats all", "that's all"], "open_ended": true, "hint_l1": "'No, that's all.' काफ़ी है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.2.p3", "type": "spot_the_error", "instruction_l1": "गलती सुधारकर सही वाक्य बोलिए", "shown_sentence": "I want one soap", "target": "Can I get one soap?", "accept": ["can i get one soap", "can i get a soap", "i would like one soap"], "error_note_l1": "'I want' थोड़ा रूखा — 'Can I get …?' ज़्यादा विनम्र।", "hint_l1": "विनम्रता से माँगिए।", "fallback": { "type": "tap_select", "options": ["I want", "Can I get", "Give me", "I need"] }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "2.2.p4", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए", "audio": "audio/en/no_thats_all.mp3", "target": "No, that's all.", "accept": ["no that's all", "thats all"], "pace": "normal", "hint_l1": "'नो, दैट्स ऑल'", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "2.2.m1", "type": "role_play_turn", "instruction_l1": "सामान माँगिए", "ai_line_en": "How can I help?", "accept": ["do you have", "i'm looking for", "can i get"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } },
+          { "id": "2.2.m2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Anything else?", "accept": ["no that's all", "yes also one more", "that's it thanks"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.2.m3", "type": "sentence_builder", "instruction_l1": "पूरा वाक्य बोलिए", "target": "Can I get one?", "accept": ["can i get one"], "tiles": ["Can", "I", "get", "one"], "fallback": { "type": "tiles" } }
+        ],
+        "recap": { "message_l1": "अब आप सामान माँग सकते हैं और ख़रीदारी पूरी कर सकते हैं!", "phrases_learned": ["Do you have …?", "I'm looking for …", "Can I get one?", "No, that's all.", "That's it, thanks."] }
+      },
+
+      {
+        "id": "2.3",
+        "title_en": "Getting around",
+        "title_l1": "आना-जाना (ऑटो और बस)",
+        "micro_skill_l1": "ऑटो/बस में जगह बताना, किराया पूछना और थोड़ा कम करवाना, रुकवाना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "ऑटो में — 'कहाँ जाना है?', किराया पूछना और थोड़ा कम करवाना, 'यहाँ रोकिए'। चलिए सीखते हैं।", "audio": "audio/hi/s2_3_warmup.mp3" },
+        "teach": [
+          { "id": "ex_where_to", "type": "exchange", "prompt_en": "Where to?", "prompt_l1": "कहाँ जाना है?", "prompt_audio": "audio/en/where_to.mp3",
+            "responses": [
+              { "en": "To the station, please.", "l1": "स्टेशन, please।", "register_l1": "जगह बताना।", "audio": "audio/en/to_the_station_please.mp3" },
+              { "en": "Market, please.", "l1": "बाज़ार, please।", "register_l1": "छोटा, सहज।", "audio": "audio/en/market_please.mp3" },
+              { "en": "Take me to the hospital.", "l1": "अस्पताल ले चलिए।", "register_l1": "साफ़ निर्देश।", "audio": "audio/en/take_me_to_the_hospital.mp3" }
+            ]
+          },
+          { "id": "ask_fare", "type": "ask", "goal_l1": "किराया पूछना, कम करवाना, रुकवाना",
+            "phrases": [
+              { "en": "How much to the station?", "l1": "स्टेशन का कितना?", "register_l1": "किराया पूछना।", "audio": "audio/en/how_much_to_the_station.mp3" },
+              { "en": "That's too much — make it less.", "l1": "ज़्यादा है — थोड़ा कम कीजिए।", "register_l1": "ऑटो का मोल-भाव।", "audio": "audio/en/thats_too_much_make_it_less.mp3" },
+              { "en": "Stop here, please.", "l1": "यहाँ रोकिए, please।", "register_l1": "उतरते समय।", "audio": "audio/en/stop_here_please.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "2.3.p1", "type": "listen_and_respond", "instruction_l1": "ऑटो वाले ने पूछा — जगह बताइए", "scenario_l1": "आप ऑटो में बैठे।", "image": "img/s2/auto_rickshaw.webp", "prompt_en": "Where to?", "audio": "audio/en/where_to.mp3", "accept": ["to the station please", "market please", "take me to the hospital", "station please"], "open_ended": true, "hint_l1": "जगह + 'please'।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.3.p2", "type": "role_play_turn", "instruction_l1": "किराया पूछिए", "scenario_l1": "स्टेशन जाना है।", "ai_line_en": "Yes, sir/madam?", "ai_line_audio": "audio/en/yes_sir_madam.mp3", "accept": ["how much to the station", "how much to station", "what's the fare to the station"], "open_ended": true, "exchanges": 1, "hint_l1": "'How much to …?'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.3.p3", "type": "role_play_turn", "instruction_l1": "किराया ज़्यादा लगा — कम करवाइए", "scenario_l1": "ऑटो वाला: 'A hundred rupees.'", "ai_line_en": "A hundred rupees.", "ai_line_audio": "audio/en/a_hundred_rupees.mp3", "accept": ["that's too much make it less", "make it less", "too much", "can you make it less", "eighty please"], "open_ended": true, "exchanges": 1, "hint_l1": "'That's too much — make it less.'", "post_feedback_l1": "बढ़िया! ऑटो का मोल-भाव भी अब आता है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.3.p4", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए — उतरते समय", "audio": "audio/en/stop_here_please.mp3", "target": "Stop here, please.", "accept": ["stop here please", "stop here"], "pace": "normal", "hint_l1": "'स्टॉप हियर, प्लीज़'", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "2.3.m1", "type": "listen_and_respond", "instruction_l1": "जगह बताइए", "prompt_en": "Where to?", "accept": ["to the station please", "market please", "take me to the hospital"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.3.m2", "type": "role_play_turn", "instruction_l1": "किराया कम करवाइए", "ai_line_en": "Eighty rupees.", "accept": ["that's too much make it less", "make it less", "too much"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } },
+          { "id": "2.3.m3", "type": "repetition_drill", "instruction_l1": "बोलिए", "target": "Stop here, please.", "accept": ["stop here please"], "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब ऑटो/बस में आप जगह बता सकते हैं, किराया पूछ सकते हैं, कम करवा सकते हैं, और रुकवा सकते हैं!", "phrases_learned": ["Where to? → … please", "How much to …?", "That's too much — make it less.", "Stop here, please."] }
+      },
+
+      {
+        "id": "2.4",
+        "title_en": "Ordering food",
+        "title_l1": "खाना ऑर्डर करना",
+        "micro_skill_l1": "ऑर्डर देना, फ़ॉलो-अप (कम तीखा, पैक करना), पीने का जवाब, बिल माँगना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "होटल में ऑर्डर देना — और साथ में 'कम तीखा', 'पैक कर दीजिए', बिल माँगना। आज यही।", "audio": "audio/hi/s2_4_warmup.mp3" },
+        "teach": [
+          { "id": "ask_order", "type": "ask", "goal_l1": "ऑर्डर देना और फ़ॉलो-अप",
+            "phrases": [
+              { "en": "One tea, please.", "l1": "एक चाय, please।", "register_l1": "'tea' की जगह कोई भी चीज़।", "audio": "audio/en/one_tea_please.mp3" },
+              { "en": "Make it less spicy, please.", "l1": "कम तीखा बनाइए।", "register_l1": "फ़ॉलो-अप — पसंद बताना।", "audio": "audio/en/make_it_less_spicy_please.mp3" },
+              { "en": "Can you pack it?", "l1": "पैक कर दीजिए?", "register_l1": "ले जाने के लिए।", "audio": "audio/en/can_you_pack_it.mp3" }
+            ]
+          },
+          { "id": "ex_to_drink", "type": "exchange", "prompt_en": "Anything to drink?", "prompt_l1": "पीने को कुछ?", "prompt_audio": "audio/en/anything_to_drink.mp3",
+            "responses": [
+              { "en": "Just water, please.", "l1": "बस पानी, please।", "register_l1": "सादा।", "audio": "audio/en/just_water_please.mp3" },
+              { "en": "One coffee, please.", "l1": "एक कॉफ़ी, please।", "register_l1": "कुछ मँगाना।", "audio": "audio/en/one_coffee_please.mp3" },
+              { "en": "No, thanks.", "l1": "नहीं, धन्यवाद।", "register_l1": "मना करना।", "audio": "audio/en/no_thanks.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "2.4.p1", "type": "role_play_turn", "instruction_l1": "वेटर आया — चाय ऑर्डर कीजिए", "scenario_l1": "चाय की दुकान पर।", "image": "img/s2/tea_stall.webp", "ai_line_en": "What would you like?", "ai_line_audio": "audio/en/what_would_you_like.mp3", "accept": ["one tea please", "i'll have tea", "one tea", "can i get a tea"], "open_ended": true, "exchanges": 1, "hint_l1": "'One tea, please.'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.4.p2", "type": "role_play_turn", "instruction_l1": "खाना मँगाया — फ़ॉलो-अप कीजिए (कम तीखा)", "scenario_l1": "वेटर: 'One masala dosa, anything else?'", "ai_line_en": "One masala dosa, anything else?", "ai_line_audio": "audio/en/one_masala_dosa_anything_else.mp3", "accept": ["make it less spicy please", "less spicy please", "can you pack it", "make it less spicy", "no that's all"], "open_ended": true, "exchanges": 1, "hint_l1": "'Make it less spicy, please.'", "post_feedback_l1": "बढ़िया! अब आप अपनी पसंद भी बता सकते हैं।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.4.p3", "type": "listen_and_respond", "instruction_l1": "वेटर पूछ रहा है — जवाब बोलिए", "prompt_en": "Anything to drink?", "audio": "audio/en/anything_to_drink.mp3", "accept": ["just water please", "one coffee please", "no thanks", "water please"], "open_ended": true, "hint_l1": "'Just water, please.'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.4.p4", "type": "speak_the_picture", "instruction_l1": "तस्वीर देखिए — खाना ख़त्म। बिल माँगिए", "image": "img/s2/restaurant_table.webp", "target": "The bill, please.", "accept": ["the bill please", "bill please", "can i get the bill"], "hint_l1": "'The bill, please.'", "fallback": { "type": "tap", "options": ["The bill, please.", "One tea, please.", "Where is it?", "Hello"] }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "2.4.m1", "type": "role_play_turn", "instruction_l1": "ऑर्डर दीजिए", "ai_line_en": "What would you like?", "accept": ["one tea please", "i'll have", "can i get"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } },
+          { "id": "2.4.m2", "type": "role_play_turn", "instruction_l1": "फ़ॉलो-अप कीजिए", "ai_line_en": "Anything else?", "accept": ["make it less spicy please", "can you pack it", "no that's all"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } },
+          { "id": "2.4.m3", "type": "speak_the_picture", "instruction_l1": "बिल माँगिए", "image": "img/s2/restaurant_table.webp", "target": "The bill, please.", "accept": ["the bill please", "bill please"], "fallback": { "type": "tap", "options": ["The bill, please.", "One tea, please.", "Hello", "How much?"] } }
+        ],
+        "recap": { "message_l1": "अब आप ऑर्डर दे सकते हैं, अपनी पसंद बता सकते हैं, और बिल माँग सकते हैं!", "phrases_learned": ["One tea, please.", "Make it less spicy, please.", "Can you pack it?", "Just water, please.", "The bill, please."] }
+      },
+
+      {
+        "id": "2.5",
+        "title_en": "On the phone",
+        "title_l1": "फ़ोन पर बात",
+        "micro_skill_l1": "फ़ोन उठाना, किसी से बात माँगना, 'रुकिए' / 'ग़लत नंबर' कहना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "फ़ोन पर अंग्रेज़ी — 'कौन बोल रहा है?', 'रुकिए', 'ग़लत नंबर'। आज यही।", "audio": "audio/hi/s2_5_warmup.mp3" },
+        "teach": [
+          { "id": "ask_phone_open", "type": "ask", "goal_l1": "फ़ोन पर शुरुआत",
+            "phrases": [
+              { "en": "Hello, who's this?", "l1": "हैलो, कौन बोल रहा है?", "register_l1": "फ़ोन उठाते ही।", "audio": "audio/en/hello_whos_this.mp3" },
+              { "en": "Can I speak to Riya?", "l1": "क्या मैं रिया से बात कर सकता हूँ?", "register_l1": "किसी को माँगना।", "audio": "audio/en/can_i_speak_to_riya.mp3" },
+              { "en": "Sorry, wrong number.", "l1": "माफ़ कीजिए, ग़लत नंबर।", "register_l1": "ग़लत नंबर पर।", "audio": "audio/en/sorry_wrong_number.mp3" }
+            ]
+          },
+          { "id": "ex_can_i_speak", "type": "exchange", "prompt_en": "Can I speak to Riya?", "prompt_l1": "क्या मैं रिया से बात कर सकता हूँ?", "prompt_audio": "audio/en/can_i_speak_to_riya.mp3",
+            "responses": [
+              { "en": "Speaking.", "l1": "मैं ही बोल रही हूँ।", "register_l1": "जब आप ही रिया हों।", "audio": "audio/en/speaking.mp3" },
+              { "en": "Hold on, please.", "l1": "ज़रा रुकिए।", "register_l1": "फ़ोन देने के लिए।", "audio": "audio/en/hold_on_please.mp3" },
+              { "en": "She's not here right now.", "l1": "वह अभी यहाँ नहीं हैं।", "register_l1": "उपलब्ध न हों तो।", "audio": "audio/en/shes_not_here_right_now.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "2.5.p1", "type": "role_play_turn", "instruction_l1": "फ़ोन बजा — उठाकर पूछिए कौन है", "scenario_l1": "अनजान नंबर से कॉल।", "image": "img/s2/phone_call.webp", "ai_line_en": "(ring ring)", "ai_line_audio": "audio/en/phone_ring.mp3", "accept": ["hello who's this", "hello whos this", "hello", "hello who is this"], "open_ended": true, "exchanges": 1, "hint_l1": "'Hello, who's this?'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.5.p2", "type": "listen_and_respond", "instruction_l1": "कोई रिया को माँग रहा है (आप ही रिया हैं) — जवाब बोलिए", "prompt_en": "Can I speak to Riya?", "audio": "audio/en/can_i_speak_to_riya.mp3", "accept": ["speaking", "this is riya", "yes speaking", "hold on please"], "open_ended": true, "hint_l1": "आप ही हैं तो — 'Speaking.'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.5.p3", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए", "audio": "audio/en/hold_on_please.mp3", "target": "Hold on, please.", "accept": ["hold on please", "hold on"], "pace": "normal", "hint_l1": "'होल्ड ऑन, प्लीज़'", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "2.5.p4", "type": "spot_the_error", "instruction_l1": "गलती सुधारकर सही वाक्य बोलिए", "shown_sentence": "I can speak to Riya?", "target": "Can I speak to Riya?", "accept": ["can i speak to riya"], "error_note_l1": "सवाल में 'Can I' आगे आता है।", "hint_l1": "क्रम बदलिए: Can I …", "fallback": { "type": "tap_select", "options": ["I can speak", "Can I speak", "Speak I can", "Can speak I"] }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "2.5.m1", "type": "role_play_turn", "instruction_l1": "फ़ोन उठाकर पूछिए", "ai_line_en": "(ring ring)", "accept": ["hello who's this", "hello"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } },
+          { "id": "2.5.m2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Can I speak to Riya?", "accept": ["speaking", "hold on please", "she's not here right now"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.5.m3", "type": "repetition_drill", "instruction_l1": "बोलिए", "target": "Sorry, wrong number.", "accept": ["sorry wrong number", "wrong number"], "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब आप फ़ोन पर भी अंग्रेज़ी में बात शुरू कर सकते हैं!", "phrases_learned": ["Hello, who's this?", "Can I speak to …?", "Speaking.", "Hold on, please.", "Sorry, wrong number."] }
+      },
+
+      {
+        "id": "2.6",
+        "title_en": "How was your day?",
+        "title_l1": "दिन कैसा रहा? — मन की बात",
+        "micro_skill_l1": "दिन के बारे में बात करना, अपनी थकान/परेशानी बताना, और किसी का हाल पूछकर तसल्ली देना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "घर पर, दोस्तों से — 'दिन कैसा रहा?', 'क्या परेशानी है?'। अब अपने मन की बात भी अंग्रेज़ी में कहना सीखते हैं।", "audio": "audio/hi/s2_6_warmup.mp3" },
+        "teach": [
+          { "id": "ex_how_was_day", "type": "exchange", "prompt_en": "How was your day?", "prompt_l1": "आपका दिन कैसा रहा?", "prompt_audio": "audio/en/how_was_your_day.mp3",
+            "responses": [
+              { "en": "It was good, thanks.", "l1": "अच्छा रहा, शुक्रिया।", "register_l1": "सकारात्मक, आम जवाब।", "audio": "audio/en/it_was_good_thanks.mp3" },
+              { "en": "Pretty tiring, actually.", "l1": "सच कहूँ तो काफ़ी थका देने वाला।", "register_l1": "थकान बताना — ईमानदारी से।", "audio": "audio/en/pretty_tiring_actually.mp3" },
+              { "en": "Same as usual. You?", "l1": "वही रोज़ जैसा। आपका?", "register_l1": "जवाब देकर हाल लौटाना।", "audio": "audio/en/same_as_usual_you.mp3" }
+            ]
+          },
+          { "id": "ex_whats_stressing", "type": "exchange", "prompt_en": "You seem tired. What's stressing you?", "prompt_l1": "आप थके लग रहे हैं। क्या परेशान कर रहा है?", "prompt_audio": "audio/en/you_seem_tired_whats_stressing_you.mp3",
+            "responses": [
+              { "en": "Work has been hectic.", "l1": "काम बहुत ज़्यादा रहा।", "register_l1": "काम की वजह बताना।", "audio": "audio/en/work_has_been_hectic.mp3" },
+              { "en": "Just a lot on my mind.", "l1": "बस मन पर बहुत कुछ है।", "register_l1": "हल्के से बताना।", "audio": "audio/en/just_a_lot_on_my_mind.mp3" },
+              { "en": "Nothing much, just tired.", "l1": "ख़ास कुछ नहीं, बस थका हूँ।", "register_l1": "टालना।", "audio": "audio/en/nothing_much_just_tired.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "2.6.p1", "type": "listen_and_respond", "instruction_l1": "घर पर कोई पूछ रहा है — अपने मन से जवाब बोलिए", "scenario_l1": "शाम, घर पर।", "image": "img/s2/home_evening.webp", "prompt_en": "How was your day?", "audio": "audio/en/how_was_your_day.mp3", "accept": ["it was good thanks", "pretty tiring actually", "same as usual you", "it was good", "tiring", "good"], "open_ended": true, "hint_l1": "जैसा बीता वैसा कहिए — 'It was good' या 'Pretty tiring'।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.6.p2", "type": "listen_and_respond", "instruction_l1": "कोई आपकी परेशानी पूछ रहा है — बताइए", "prompt_en": "What's stressing you?", "audio": "audio/en/whats_stressing_you.mp3", "accept": ["work has been hectic", "just a lot on my mind", "nothing much just tired", "work", "a lot on my mind"], "open_ended": true, "hint_l1": "वजह बताइए — 'Work has been hectic.'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.6.p3", "type": "role_play_turn", "instruction_l1": "दोस्त परेशान लग रहा है — हाल पूछिए और तसल्ली दीजिए", "scenario_l1": "दोस्त चुप और उदास बैठा है।", "ai_line_en": "I've had a rough day.", "ai_line_audio": "audio/en/ive_had_a_rough_day.mp3", "accept": ["what's wrong", "don't worry it'll be fine", "take some rest", "i'm here for you", "what happened", "are you okay"], "open_ended": true, "exchanges": 1, "hint_l1": "'What's wrong?' या 'Don't worry, it'll be fine.'", "post_feedback_l1": "बहुत अच्छे — किसी का हाल पूछना और तसल्ली देना, यह भी बातचीत का सबसे ख़ूबसूरत हिस्सा है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.6.p4", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए — तसल्ली देना", "audio": "audio/en/dont_worry_itll_be_fine.mp3", "target": "Don't worry, it'll be fine.", "accept": ["don't worry it'll be fine", "dont worry it will be fine", "don't worry itll be fine"], "pace": "slow", "hint_l1": "'डोंट वरी, इट'ल बी फ़ाइन'", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "2.6.m1", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "How was your day?", "accept": ["it was good thanks", "pretty tiring actually", "same as usual you", "good"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.6.m2", "type": "listen_and_respond", "instruction_l1": "अपनी परेशानी बताइए", "prompt_en": "What's stressing you?", "accept": ["work has been hectic", "just a lot on my mind", "nothing much just tired"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.6.m3", "type": "role_play_turn", "instruction_l1": "तसल्ली दीजिए", "ai_line_en": "I'm a bit worried.", "accept": ["don't worry it'll be fine", "take some rest", "i'm here for you", "what's wrong"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब आप अपने मन की बात कह सकते हैं — दिन कैसा रहा, क्या परेशानी है — और किसी को तसल्ली भी दे सकते हैं।", "phrases_learned": ["How was your day?", "Pretty tiring, actually.", "Work has been hectic.", "What's wrong?", "Don't worry, it'll be fine."] }
+      },
+
+      {
+        "id": "2.7",
+        "title_en": "What did you think?",
+        "title_l1": "आपको कैसा लगा? — राय देना",
+        "micro_skill_l1": "फ़िल्म, इवेंट, कोर्स या प्रोडक्ट पर अपनी राय देना — पसंद/नापसंद, वजह के साथ।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "कोई पूछे 'फ़िल्म कैसी थी?', 'कोर्स कैसा है?' — अपनी राय अंग्रेज़ी में देना सीखते हैं। कोई सही या ग़लत जवाब नहीं — जो दिल कहे, वही बोलिए।", "audio": "audio/hi/s2_7_warmup.mp3" },
+        "teach": [
+          { "id": "ex_how_was_movie", "type": "exchange", "prompt_en": "How was the movie?", "prompt_l1": "फ़िल्म कैसी थी?", "prompt_audio": "audio/en/how_was_the_movie.mp3",
+            "responses": [
+              { "en": "It was great, I loved it.", "l1": "बहुत बढ़िया, मुझे बहुत पसंद आई।", "register_l1": "बहुत पसंद आने पर।", "audio": "audio/en/it_was_great_i_loved_it.mp3" },
+              { "en": "Honestly, a bit boring.", "l1": "सच कहूँ तो थोड़ी बोरिंग।", "register_l1": "पसंद न आने पर — ईमानदारी से।", "audio": "audio/en/honestly_a_bit_boring.mp3" },
+              { "en": "Not bad, worth a watch.", "l1": "बुरी नहीं, देखी जा सकती है।", "register_l1": "बीच का जवाब।", "audio": "audio/en/not_bad_worth_a_watch.mp3" }
+            ]
+          },
+          { "id": "ex_how_was_course", "type": "exchange", "prompt_en": "How's the new course?", "prompt_l1": "नया कोर्स कैसा है?", "prompt_audio": "audio/en/hows_the_new_course.mp3",
+            "responses": [
+              { "en": "Very useful, I'm learning a lot.", "l1": "बहुत काम का, बहुत कुछ सीख रहा हूँ।", "register_l1": "तारीफ़ — वजह के साथ।", "audio": "audio/en/very_useful_im_learning_a_lot.mp3" },
+              { "en": "A bit slow, but okay.", "l1": "थोड़ा धीमा, पर ठीक है।", "register_l1": "मिली-जुली राय।", "audio": "audio/en/a_bit_slow_but_okay.mp3" },
+              { "en": "Honestly, not worth it.", "l1": "सच कहूँ तो इतना अच्छा नहीं।", "register_l1": "साफ़ नापसंद।", "audio": "audio/en/honestly_not_worth_it.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "2.7.p1", "type": "listen_and_respond", "instruction_l1": "दोस्त ने फ़िल्म के बारे में पूछा — अपनी राय बोलिए", "scenario_l1": "सिनेमा के बाद।", "image": "img/s2/cinema_ticket.webp", "prompt_en": "How was the movie?", "audio": "audio/en/how_was_the_movie.mp3", "accept": ["it was great i loved it", "honestly a bit boring", "not bad worth a watch", "it was great", "boring", "not bad", "loved it"], "open_ended": true, "hint_l1": "जो लगा वही — 'It was great!' या 'A bit boring.'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.7.p2", "type": "listen_and_respond", "instruction_l1": "कोई कोर्स के बारे में पूछ रहा है — राय दीजिए", "prompt_en": "How's the new course?", "audio": "audio/en/hows_the_new_course.mp3", "accept": ["very useful i'm learning a lot", "a bit slow but okay", "honestly not worth it", "very useful", "it's okay", "useful"], "open_ended": true, "hint_l1": "तारीफ़ या आलोचना — दोनों ठीक।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.7.p3", "type": "role_play_turn", "instruction_l1": "नया फ़ोन/प्रोडक्ट के बारे में राय दीजिए", "scenario_l1": "दोस्त ने आपका नया फ़ोन देखा।", "ai_line_en": "How's the new phone?", "ai_line_audio": "audio/en/hows_the_new_phone.mp3", "accept": ["working great so far", "it's okay nothing special", "honestly not worth the price", "working great", "it's good", "not worth it"], "open_ended": true, "exchanges": 1, "hint_l1": "'Working great so far' या 'It's okay, nothing special.'", "post_feedback_l1": "शाबाश — अब आप अपनी राय खुलकर दे सकते हैं। यही तो आत्मविश्वास है!", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.7.p4", "type": "sentence_builder", "instruction_l1": "राय का वाक्य जोड़कर बोलिए", "target": "It was great, I loved it.", "accept": ["it was great i loved it"], "tiles": ["It", "was", "great,", "I", "loved", "it"], "hint_l1": "यह … बढ़िया थी … मुझे पसंद आई।", "fallback": { "type": "tiles" }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "2.7.m1", "type": "listen_and_respond", "instruction_l1": "फ़िल्म पर राय बोलिए", "prompt_en": "How was the movie?", "accept": ["it was great i loved it", "honestly a bit boring", "not bad worth a watch"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.7.m2", "type": "listen_and_respond", "instruction_l1": "इवेंट पर राय बोलिए", "prompt_en": "How was the event?", "accept": ["it was well organised", "it was great", "could have been better", "i really enjoyed it"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.7.m3", "type": "role_play_turn", "instruction_l1": "प्रोडक्ट पर राय दीजिए", "ai_line_en": "How's the new phone?", "accept": ["working great so far", "it's okay nothing special", "not worth the price"], "open_ended": true, "exchanges": 1, "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब आप अपनी राय दे सकते हैं — फ़िल्म, इवेंट, कोर्स, प्रोडक्ट — पसंद हो या नापसंद, खुलकर!", "phrases_learned": ["How was the movie?", "It was great, I loved it.", "Honestly, a bit boring.", "Very useful, I'm learning a lot.", "It's okay, nothing special."] }
+      },
+
+      {
+        "id": "2.8",
+        "title_en": "A trip to the market",
+        "title_l1": "बाज़ार की एक पूरी बातचीत",
+        "micro_skill_l1": "मोल-भाव का पूरा हुनर जोड़कर एक असली बाज़ार की बातचीत — दाम, काउंटर, मुफ़्त धनिया, सौदा।",
+        "status": "complete",
+        "note_l1": "रिव्यू/कैपस्टोन सब-स्टेज: चेन किए गए single-exchange role_play_turns से एक पूरी मोल-भाव की बातचीत। मल्टी-टर्न का एहसास, पर MVP की single-exchange सीमा के अंदर।",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "आज एक पूरी बाज़ार की बातचीत — दाम पूछना, काउंटर देना, थोड़ा मुफ़्त लेना, सौदा पक्का करना। जैसे असल ज़िंदगी में!", "audio": "audio/hi/s2_8_warmup.mp3" },
+        "teach": [
+          { "id": "scene_map", "type": "note", "prompt_l1": "मोल-भाव ऐसे चलता है: दाम पूछो → काउंटर दो → फ़ॉलो-अप/मुफ़्त माँगो → सौदा पक्का करो। चलिए करके देखते हैं।" }
+        ],
+        "practice": [
+          { "id": "2.8.p1", "type": "role_play_turn", "instruction_l1": "दुकान पर — आम का दाम पूछिए", "scenario_l1": "बातचीत शुरू।", "image": "img/s2/shop_vegetables.webp", "ai_line_en": "Fresh mangoes! What would you like?", "ai_line_audio": "audio/en/fresh_mangoes_what_would_you_like.mp3", "accept": ["how much is this", "how much for the mangoes", "what's the price", "how much"], "open_ended": true, "exchanges": 1, "hint_l1": "'How much for the mangoes?'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.8.p2", "type": "role_play_turn", "instruction_l1": "दाम सुना (₹80/किलो) — काउंटर दीजिए", "scenario_l1": "दुकानदार: 'Eighty rupees a kilo.'", "ai_line_en": "Eighty rupees a kilo.", "ai_line_audio": "audio/en/eighty_rupees_a_kilo.mp3", "accept": ["can you make it sixty", "that's a bit too much", "make it less", "is it sweet", "too much", "sixty please"], "open_ended": true, "exchanges": 1, "hint_l1": "काउंटर: 'Can you make it sixty?' या पूछिए 'Is it sweet?'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.8.p3", "type": "role_play_turn", "instruction_l1": "दुकानदार झुका (₹70) — कुछ मुफ़्त माँगिए", "scenario_l1": "दुकानदार: 'Okay, seventy. Final price.'", "ai_line_en": "Okay, seventy. Final price.", "ai_line_audio": "audio/en/okay_seventy_final_price.mp3", "accept": ["add one more please", "give a few extra", "throw in a couple more", "okay add a few extra", "give some extra"], "open_ended": true, "exchanges": 1, "hint_l1": "'Okay, but give a few extra, please.'", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "2.8.p4", "type": "role_play_turn", "instruction_l1": "सौदा पक्का — हाँ कहकर शुक्रिया कीजिए", "scenario_l1": "दुकानदार: 'Done — seventy, with two extra.'", "ai_line_en": "Done — seventy, with two extra.", "ai_line_audio": "audio/en/done_seventy_with_two_extra.mp3", "accept": ["okay deal thank you", "done thank you", "i'll take it thanks", "okay thank you", "deal"], "open_ended": true, "exchanges": 1, "hint_l1": "'Okay, deal. Thank you!'", "post_feedback_l1": "वाह, Riya! आपने पूरी बाज़ार की बातचीत कर ली — दाम पूछा, काउंटर दिया, मुफ़्त लिया, सौदा पक्का किया। अब बाज़ार आपका है!", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "2.8.m1", "type": "listen_and_respond", "instruction_l1": "दाम पूछिए", "prompt_en": "(ask the price)", "accept": ["how much is this", "what's the price", "how much"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.8.m2", "type": "listen_and_respond", "instruction_l1": "काउंटर दीजिए", "prompt_en": "Eighty rupees.", "accept": ["can you make it sixty", "that's too much", "make it less"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.8.m3", "type": "listen_and_respond", "instruction_l1": "कुछ मुफ़्त माँगिए", "prompt_en": "Okay, seventy, final.", "accept": ["add a few extra", "give some extra", "throw in a couple more"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "2.8.m4", "type": "listen_and_respond", "instruction_l1": "सौदा पक्का कीजिए", "prompt_en": "Done.", "accept": ["okay deal thank you", "done thank you", "i'll take it thanks"], "open_ended": true, "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "बधाई हो! आपने Stage 2 पूरा किया — दुकान का मोल-भाव, ऑटो, फ़ोन, खाना, समय, मन की बात और राय देना, सब कुछ! Riya, अब रोज़ की ज़िंदगी आपकी अंग्रेज़ी में है।", "phrases_learned": ["पूरी मोल-भाव बातचीत: दाम → काउंटर → मुफ़्त → सौदा पक्का"] }
+      }
+    ]
+  }
+}

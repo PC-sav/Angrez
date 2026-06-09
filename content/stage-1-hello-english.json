@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "schema_version": "0.2",
+    "model": "conversational-exchange",
+    "note_for_team": "Angrez Stage 1, rebuilt around EXCHANGES, not isolated words. The unit is: someone says a prompt, the learner can speak ANY of several natural responses. Goal = arm the learner with ready-made natural Indian-English so she never freezes. Speech is primary on every practice puzzle; 'fallback' is the no-mic path only. All l1 strings are natural Devanagari, warm and encouraging (Mitthu's voice), never shaming. accept[] lists are intentionally forgiving (accent + ASR variants) — many right answers, never one.",
+    "design_rules": {
+      "responses_per_prompt": 3,
+      "difficulty": "conversational chunks (was 'single words' in PRD v4.0 — conscious change, see chat)",
+      "open_ended_prompts": "Where the answer depends on the learner (e.g. their own name), set open_ended:true and accept the FRAME ('my name is ___', 'i'm ___'); do not hard-check the name on-device.",
+      "name_matching": "Use device speech result loosely; never fail a learner for an unrecognised proper noun."
+    },
+    "audio_convention": {
+      "english": "audio/en/<key>.mp3 — English phrase, AI-TTS, native Indian-English + RP",
+      "hindi": "audio/hi/<key>.mp3 — Hindi prompts, AI-TTS",
+      "regenerable": true
+    },
+    "image_convention": "img/s1/<name>.webp — simple, clear, compressed.",
+    "images_needed_stage1": [
+      "img/s1/two_people_meeting.webp", "img/s1/handshake.webp", "img/s1/cup_of_tea.webp",
+      "img/s1/waving_bye.webp", "img/s1/numbers_1_10.webp",
+      "img/s1/colour_red.webp", "img/s1/colour_blue.webp", "img/s1/colour_green.webp",
+      "img/s1/colour_yellow.webp", "img/s1/colour_black.webp", "img/s1/colour_white.webp"
+    ]
+  },
+
+  "pack": {
+    "stage": 1,
+    "version": 2,
+    "language": "hi",
+    "name_en": "Hello English",
+    "name_l1": "नमस्ते इंग्लिश",
+    "description_l1": "रोज़ की बातचीत — कोई पूछे तो आपके पास जवाब तैयार हो। कोई जल्दी नहीं, कोई डर नहीं।",
+    "mastery_threshold": 0.7,
+
+    "points": {
+      "puzzle_base": 5, "voice_bonus": 5, "bravery_bonus": 5,
+      "sub_stage_complete": 30, "sub_stage_perfect_bonus": 20, "daily_open": 2
+    },
+
+    "feedback": {
+      "celebrate_l1": ["शाबाश!", "बहुत बढ़िया!", "वाह, सही बोला!", "एकदम सही!"],
+      "heard_prefix_l1": "मैंने सुना",
+      "almost_l1": "लगभग सही! एक बार और बोलिए?",
+      "good_effort_l1": "अच्छी कोशिश! आपने बोला — यही तो असली बात है।",
+      "mic_broken_l1": "माइक थोड़ा सो रहा है! चलिए टाइप करते हैं। कोई बात नहीं।",
+      "noise_high_l1": "आसपास थोड़ा शोर है — टाइप करना है क्या?",
+      "silence_l1": "आराम से बोलिए, मैं सुन रहा हूँ।",
+      "ready_to_listen_l1": "सुनने के लिए तैयार"
+    },
+
+    "sub_stages": [
+      {
+        "id": "1.1",
+        "title_en": "Hello & How are you",
+        "title_l1": "नमस्ते और हालचाल",
+        "micro_skill_l1": "किसी से मिलने पर अभिवादन करना और 'कैसे हैं?' का सहज जवाब देना।",
+        "status": "complete",
+        "warmup": {
+          "type": "recall_prompt",
+          "prompt_l1": "जब कोई आपसे पूछे 'कैसे हो?' — आप क्या कहते हैं? अब वही अंग्रेज़ी में, आसानी से।",
+          "audio": "audio/hi/s1_1_warmup.mp3"
+        },
+        "teach": [
+          {
+            "id": "ph_hello", "type": "phrase",
+            "en": "Hello", "l1_meaning": "नमस्ते / हैलो",
+            "l1_note": "मिलते ही सबसे आसान शब्द। 'Hi' भी चलेगा।",
+            "audio": "audio/en/hello.mp3"
+          },
+          {
+            "id": "ex_how_are_you", "type": "exchange",
+            "prompt_en": "How are you?", "prompt_l1": "आप कैसे हैं?",
+            "prompt_audio": "audio/en/how_are_you.mp3",
+            "responses": [
+              { "en": "I'm good, thank you.", "l1": "मैं ठीक हूँ, धन्यवाद", "register_l1": "सबसे आम, सुरक्षित जवाब — किसी के भी साथ।", "audio": "audio/en/im_good_thank_you.mp3" },
+              { "en": "All good.", "l1": "सब बढ़िया", "register_l1": "दोस्तों के साथ, हल्के में।", "audio": "audio/en/all_good.mp3" },
+              { "en": "Fine, thanks. And you?", "l1": "ठीक हूँ, शुक्रिया। और आप?", "register_l1": "जवाब देकर सवाल लौटाया — बातचीत चलती रहती है।", "audio": "audio/en/fine_thanks_and_you.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "1.1.p1", "type": "listen_and_respond", "instruction_l1": "मित्थू पूछ रहा है — अपने मन से कोई भी सही जवाब बोलिए",
+            "prompt_en": "How are you?", "prompt_l1": "आप कैसे हैं?", "audio": "audio/en/how_are_you.mp3",
+            "accept": ["i'm good thank you", "im good thanks", "all good", "all well", "fine thanks and you", "fine thank you", "good", "i am fine", "pretty good"],
+            "open_ended": true, "hint_l1": "कोई एक जवाब काफ़ी है — 'All good' भी सही, 'I'm good, thank you' भी।",
+            "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.1.p2", "type": "speak_the_picture", "instruction_l1": "तस्वीर देखिए — दो लोग मिल रहे हैं। अभिवादन बोलिए",
+            "image": "img/s1/two_people_meeting.webp", "target": "Hello",
+            "accept": ["hello", "hi", "hai", "hello hi"], "hint_l1": "मिलते ही सबसे पहले…",
+            "fallback": { "type": "tap", "options": ["Hello", "Bye", "Sorry", "Thanks"] }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.1.p3", "type": "repetition_drill", "instruction_l1": "सुनिए और वैसे ही बोलिए — ताकि ज़बान पर चढ़ जाए",
+            "audio": "audio/en/fine_thanks_and_you.mp3", "target": "Fine, thanks. And you?",
+            "accept": ["fine thanks and you", "fine thank you and you", "fine thanks and u"], "pace": "slow",
+            "hint_l1": "तीन हिस्से: Fine … thanks … and you?", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.1.p4", "type": "role_play_turn", "instruction_l1": "मित्थू आपसे मिल रहा है — जवाब बोलिए",
+            "scenario_l1": "मित्थू मुस्कुराते हुए: 'Hello! How are you?'", "ai_line_en": "Hello! How are you?", "ai_line_audio": "audio/en/hello_how_are_you.mp3",
+            "accept": ["i'm good thank you", "all good", "fine thanks and you", "good", "hello i'm good"], "open_ended": true, "exchanges": 1,
+            "hint_l1": "पहले 'Hello' या सीधे जवाब — दोनों ठीक।", "post_feedback_l1": "देखिए, आपने बात शुरू कर दी! यही अंग्रेज़ी बोलना है।",
+            "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "1.1.m1", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "How are you?", "accept": ["i'm good thank you", "all good", "fine thanks and you", "good", "fine"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.1.m2", "type": "speak_the_picture", "instruction_l1": "अभिवादन बोलिए", "image": "img/s1/two_people_meeting.webp", "target": "Hello", "accept": ["hello", "hi"], "fallback": { "type": "tap", "options": ["Hello", "Bye", "Night", "Sorry"] } },
+          { "id": "1.1.m3", "type": "repetition_drill", "instruction_l1": "बोलिए", "target": "All good", "accept": ["all good", "all well"], "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "आज आपने हालचाल पूछने का जवाब देना सीखा — All good, I'm good thank you, Fine thanks and you?", "phrases_learned": ["Hello", "How are you?", "I'm good, thank you.", "All good.", "Fine, thanks. And you?"] }
+      },
+
+      {
+        "id": "1.2",
+        "title_en": "Your name",
+        "title_l1": "आपका नाम",
+        "micro_skill_l1": "अपना नाम बताना और 'मिलकर अच्छा लगा' का जवाब देना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "कोई नया इंसान पूछे 'आपका नाम क्या है?' — अब अंग्रेज़ी में बताना सीखते हैं।", "audio": "audio/hi/s1_2_warmup.mp3" },
+        "teach": [
+          { "id": "ex_your_name", "type": "exchange", "prompt_en": "What's your name?", "prompt_l1": "आपका नाम क्या है?", "prompt_audio": "audio/en/whats_your_name.mp3",
+            "responses": [
+              { "en": "I'm Riya.", "l1": "मैं रिया हूँ। (अपना नाम कहिए)", "register_l1": "सबसे आसान और सहज।", "audio": "audio/en/im_name.mp3" },
+              { "en": "My name is Riya.", "l1": "मेरा नाम रिया है।", "register_l1": "थोड़ा ज़्यादा औपचारिक — काम या इंटरव्यू में।", "audio": "audio/en/my_name_is.mp3" },
+              { "en": "I'm Riya, nice to meet you.", "l1": "मैं रिया हूँ, आपसे मिलकर अच्छा लगा।", "register_l1": "गर्मजोशी से — पहली मुलाक़ात में बढ़िया।", "audio": "audio/en/im_name_nice_to_meet_you.mp3" }
+            ]
+          },
+          { "id": "ex_nice_to_meet", "type": "exchange", "prompt_en": "Nice to meet you.", "prompt_l1": "आपसे मिलकर अच्छा लगा।", "prompt_audio": "audio/en/nice_to_meet_you.mp3",
+            "responses": [
+              { "en": "Nice to meet you too.", "l1": "मुझे भी आपसे मिलकर अच्छा लगा।", "register_l1": "सबसे आम जवाब।", "audio": "audio/en/nice_to_meet_you_too.mp3" },
+              { "en": "You too.", "l1": "आपसे भी।", "register_l1": "छोटा, सहज, दोस्ताना।", "audio": "audio/en/you_too.mp3" },
+              { "en": "Same here.", "l1": "मेरी भी यही बात।", "register_l1": "हल्के-फुल्के अंदाज़ में।", "audio": "audio/en/same_here.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "1.2.p1", "type": "listen_and_respond", "instruction_l1": "मित्थू पूछ रहा है — अपना नाम बताइए", "prompt_en": "What's your name?", "audio": "audio/en/whats_your_name.mp3",
+            "accept_frames": ["i'm *", "i am *", "my name is *", "myself *"], "open_ended": true, "name_field": true,
+            "hint_l1": "'I'm …' या 'My name is …' — आगे अपना नाम।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.2.p2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Nice to meet you.", "audio": "audio/en/nice_to_meet_you.mp3",
+            "accept": ["nice to meet you too", "you too", "same here", "nice to meet you"], "open_ended": true,
+            "hint_l1": "'You too' भी काफ़ी है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.2.p3", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए", "audio": "audio/en/im_name_nice_to_meet_you.mp3", "target": "I'm Riya, nice to meet you.",
+            "accept": ["i'm * nice to meet you", "i am * nice to meet you"], "open_ended": true, "pace": "slow",
+            "hint_l1": "नाम की जगह अपना नाम कहिए।", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.2.p4", "type": "role_play_turn", "instruction_l1": "नई मुलाक़ात — जवाब दीजिए", "scenario_l1": "मित्थू: 'Hi! What's your name?'", "ai_line_en": "Hi! What's your name?", "ai_line_audio": "audio/en/hi_whats_your_name.mp3",
+            "accept_frames": ["i'm *", "my name is *"], "open_ended": true, "name_field": true, "exchanges": 1,
+            "hint_l1": "अपना नाम बताइए — 'I'm …'", "post_feedback_l1": "बहुत बढ़िया! अब कोई पूछेगा तो आप तैयार हैं।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "1.2.m1", "type": "listen_and_respond", "instruction_l1": "अपना नाम बताइए", "prompt_en": "What's your name?", "open_ended": true, "name_field": true, "accept_frames": ["i'm *", "my name is *"], "fallback": { "type": "text" } },
+          { "id": "1.2.m2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Nice to meet you.", "accept": ["nice to meet you too", "you too", "same here"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.2.m3", "type": "repetition_drill", "instruction_l1": "बोलिए", "target": "My name is Riya", "accept": ["my name is *"], "open_ended": true, "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब आप अपना नाम बता सकते हैं और 'मिलकर अच्छा लगा' का जवाब दे सकते हैं!", "phrases_learned": ["What's your name?", "I'm …", "My name is …", "Nice to meet you too.", "You too."] }
+      },
+
+      {
+        "id": "1.3",
+        "title_en": "Thanks & sorry",
+        "title_l1": "शुक्रिया और माफ़ी",
+        "micro_skill_l1": "धन्यवाद और माफ़ी का सहज जवाब देना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "कोई आपको 'Thank you' कहे — आप क्या कहेंगे? आज यही सीखते हैं।", "audio": "audio/hi/s1_3_warmup.mp3" },
+        "teach": [
+          { "id": "ex_thank_you", "type": "exchange", "prompt_en": "Thank you!", "prompt_l1": "धन्यवाद!", "prompt_audio": "audio/en/thank_you.mp3",
+            "responses": [
+              { "en": "You're welcome.", "l1": "आपका स्वागत है / कोई बात नहीं", "register_l1": "सबसे आम और विनम्र।", "audio": "audio/en/youre_welcome.mp3" },
+              { "en": "No problem.", "l1": "कोई बात नहीं", "register_l1": "सहज, दोस्ताना।", "audio": "audio/en/no_problem.mp3" },
+              { "en": "Anytime.", "l1": "जब चाहें / हमेशा हाज़िर", "register_l1": "गर्मजोशी से, करीबी लोगों के साथ।", "audio": "audio/en/anytime.mp3" }
+            ]
+          },
+          { "id": "ex_sorry", "type": "exchange", "prompt_en": "Sorry!", "prompt_l1": "माफ़ कीजिए!", "prompt_audio": "audio/en/sorry.mp3",
+            "responses": [
+              { "en": "It's okay.", "l1": "ठीक है, कोई बात नहीं", "register_l1": "सबसे आम।", "audio": "audio/en/its_okay.mp3" },
+              { "en": "No worries.", "l1": "चिंता मत कीजिए", "register_l1": "हल्के अंदाज़ में।", "audio": "audio/en/no_worries.mp3" },
+              { "en": "That's alright.", "l1": "कोई हर्ज़ नहीं", "register_l1": "थोड़ा विनम्र।", "audio": "audio/en/thats_alright.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "1.3.p1", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Thank you!", "audio": "audio/en/thank_you.mp3",
+            "accept": ["you're welcome", "youre welcome", "no problem", "anytime", "welcome"], "open_ended": true, "hint_l1": "'You're welcome' या 'No problem'।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.3.p2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Sorry!", "audio": "audio/en/sorry.mp3",
+            "accept": ["it's okay", "its okay", "no worries", "that's alright", "thats alright", "okay", "no problem"], "open_ended": true, "hint_l1": "'It's okay' काफ़ी है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.3.p3", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए", "audio": "audio/en/youre_welcome.mp3", "target": "You're welcome", "accept": ["you're welcome", "youre welcome", "your welcome"], "pace": "slow", "hint_l1": "'योर वेलकम'", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.3.p4", "type": "role_play_turn", "instruction_l1": "जवाब दीजिए", "scenario_l1": "किसी ने आपकी मदद के लिए कहा: 'Thank you so much!'", "ai_line_en": "Thank you so much!", "ai_line_audio": "audio/en/thank_you_so_much.mp3",
+            "accept": ["you're welcome", "no problem", "anytime", "welcome"], "open_ended": true, "exchanges": 1, "hint_l1": "'You're welcome' या 'Anytime'।", "post_feedback_l1": "बहुत बढ़िया — विनम्रता से जवाब दिया!", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "1.3.m1", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Thank you!", "accept": ["you're welcome", "no problem", "anytime"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.3.m2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Sorry!", "accept": ["it's okay", "no worries", "that's alright"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.3.m3", "type": "repetition_drill", "instruction_l1": "बोलिए", "target": "No problem", "accept": ["no problem"], "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब शुक्रिया और माफ़ी, दोनों का जवाब आपको आता है!", "phrases_learned": ["You're welcome.", "No problem.", "Anytime.", "It's okay.", "No worries."] }
+      },
+
+      {
+        "id": "1.4",
+        "title_en": "Yes please, no thanks",
+        "title_l1": "हाँ जी, नहीं शुक्रिया",
+        "micro_skill_l1": "विनम्रता से हाँ/ना कहना और मदद के लिए हामी भरना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "कोई चाय पूछे — 'हाँ' या 'ना' विनम्रता से कैसे कहें? चलिए सीखते हैं।", "audio": "audio/hi/s1_4_warmup.mp3" },
+        "teach": [
+          { "id": "ex_would_you_like", "type": "exchange", "prompt_en": "Would you like some tea?", "prompt_l1": "क्या आप चाय लेंगे?", "prompt_audio": "audio/en/would_you_like_tea.mp3",
+            "responses": [
+              { "en": "Yes, please.", "l1": "हाँ, ज़रूर।", "register_l1": "विनम्रता से हाँ।", "audio": "audio/en/yes_please.mp3" },
+              { "en": "No, thank you.", "l1": "नहीं, धन्यवाद।", "register_l1": "विनम्रता से ना।", "audio": "audio/en/no_thank_you.mp3" },
+              { "en": "Maybe later.", "l1": "शायद बाद में।", "register_l1": "टालना, पर विनम्रता से।", "audio": "audio/en/maybe_later.mp3" }
+            ]
+          },
+          { "id": "ex_can_you_help", "type": "exchange", "prompt_en": "Can you help me?", "prompt_l1": "क्या आप मेरी मदद करेंगे?", "prompt_audio": "audio/en/can_you_help_me.mp3",
+            "responses": [
+              { "en": "Sure.", "l1": "ज़रूर।", "register_l1": "सहज, दोस्ताना हाँ।", "audio": "audio/en/sure.mp3" },
+              { "en": "Of course.", "l1": "बिल्कुल।", "register_l1": "गर्मजोशी से।", "audio": "audio/en/of_course.mp3" },
+              { "en": "Yes, definitely.", "l1": "हाँ, ज़रूर।", "register_l1": "पूरे भरोसे से।", "audio": "audio/en/yes_definitely.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "1.4.p1", "type": "listen_and_respond", "instruction_l1": "विनम्रता से जवाब बोलिए", "prompt_en": "Would you like some tea?", "audio": "audio/en/would_you_like_tea.mp3",
+            "accept": ["yes please", "no thank you", "no thanks", "maybe later", "yes", "no"], "open_ended": true, "hint_l1": "'Yes, please' या 'No, thank you'।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.4.p2", "type": "listen_and_respond", "instruction_l1": "हामी भरिए", "prompt_en": "Can you help me?", "audio": "audio/en/can_you_help_me.mp3",
+            "accept": ["sure", "of course", "yes definitely", "yes", "of course i can"], "open_ended": true, "hint_l1": "'Sure' या 'Of course'।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.4.p3", "type": "speak_the_picture", "instruction_l1": "तस्वीर देखिए — कोई चाय दे रहा है। विनम्रता से हाँ कहिए", "image": "img/s1/cup_of_tea.webp", "target": "Yes, please.", "accept": ["yes please", "yes", "sure"], "hint_l1": "हाँ + विनम्रता…", "fallback": { "type": "tap", "options": ["Yes, please.", "No, thank you.", "Sorry.", "Hello."] }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.4.p4", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए", "audio": "audio/en/no_thank_you.mp3", "target": "No, thank you.", "accept": ["no thank you", "no thanks"], "pace": "slow", "hint_l1": "नरमी से — 'No, thank you'", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "1.4.m1", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Would you like some tea?", "accept": ["yes please", "no thank you", "maybe later"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.4.m2", "type": "listen_and_respond", "instruction_l1": "हामी भरिए", "prompt_en": "Can you help me?", "accept": ["sure", "of course", "yes definitely"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.4.m3", "type": "repetition_drill", "instruction_l1": "बोलिए", "target": "Of course", "accept": ["of course"], "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब आप विनम्रता से हाँ और ना, दोनों कह सकते हैं!", "phrases_learned": ["Yes, please.", "No, thank you.", "Maybe later.", "Sure.", "Of course."] }
+      },
+
+      {
+        "id": "1.5",
+        "title_en": "Small talk",
+        "title_l1": "हल्की-फुल्की बातचीत",
+        "micro_skill_l1": "रोज़मर्रा की कैज़ुअल बातचीत — 'और सुनाओ?' टाइप।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "दोस्त मिलने पर पूछता है 'और, क्या चल रहा है?' — अंग्रेज़ी में इसका सहज जवाब सीखते हैं।", "audio": "audio/hi/s1_5_warmup.mp3" },
+        "teach": [
+          { "id": "ex_hows_it_going", "type": "exchange", "prompt_en": "How's it going?", "prompt_l1": "कैसा चल रहा है?", "prompt_audio": "audio/en/hows_it_going.mp3",
+            "responses": [
+              { "en": "Going well.", "l1": "बढ़िया चल रहा है।", "register_l1": "सहज, सकारात्मक।", "audio": "audio/en/going_well.mp3" },
+              { "en": "Pretty good.", "l1": "काफ़ी अच्छा।", "register_l1": "कैज़ुअल।", "audio": "audio/en/pretty_good.mp3" },
+              { "en": "Same as usual.", "l1": "वही रोज़ जैसा।", "register_l1": "जब कुछ ख़ास न हो — बहुत आम।", "audio": "audio/en/same_as_usual.mp3" }
+            ]
+          },
+          { "id": "ex_whats_up", "type": "exchange", "prompt_en": "What's up?", "prompt_l1": "क्या हाल है? / और सुनाओ?", "prompt_audio": "audio/en/whats_up.mp3",
+            "responses": [
+              { "en": "Nothing much.", "l1": "ख़ास कुछ नहीं।", "register_l1": "सबसे आम कैज़ुअल जवाब।", "audio": "audio/en/nothing_much.mp3" },
+              { "en": "Just the usual.", "l1": "बस वही रोज़ का।", "register_l1": "हल्के अंदाज़ में।", "audio": "audio/en/just_the_usual.mp3" },
+              { "en": "All good, you?", "l1": "सब बढ़िया, तुम सुनाओ?", "register_l1": "जवाब + सवाल लौटाना।", "audio": "audio/en/all_good_you.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "1.5.p1", "type": "listen_and_respond", "instruction_l1": "कैज़ुअल जवाब बोलिए", "prompt_en": "How's it going?", "audio": "audio/en/hows_it_going.mp3",
+            "accept": ["going well", "pretty good", "same as usual", "good", "all good"], "open_ended": true, "hint_l1": "'Going well' या 'Pretty good'।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.5.p2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "What's up?", "audio": "audio/en/whats_up.mp3",
+            "accept": ["nothing much", "just the usual", "all good you", "all good", "not much"], "open_ended": true, "hint_l1": "'Nothing much' सबसे आसान।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.5.p3", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए", "audio": "audio/en/all_good_you.mp3", "target": "All good, you?", "accept": ["all good you", "all good and you"], "pace": "normal", "hint_l1": "जवाब देकर सवाल लौटाइए।", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.5.p4", "type": "role_play_turn", "instruction_l1": "दोस्त मिला — जवाब दीजिए", "scenario_l1": "मित्थू: 'Hey! What's up?'", "ai_line_en": "Hey! What's up?", "ai_line_audio": "audio/en/hey_whats_up.mp3",
+            "accept": ["nothing much", "all good you", "just the usual", "all good"], "open_ended": true, "exchanges": 1, "hint_l1": "'Nothing much' या 'All good, you?'", "post_feedback_l1": "एकदम नैचुरल लगा! ऐसे ही दोस्तों से बात होती है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "1.5.m1", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "How's it going?", "accept": ["going well", "pretty good", "same as usual"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.5.m2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "What's up?", "accept": ["nothing much", "just the usual", "all good you"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.5.m3", "type": "repetition_drill", "instruction_l1": "बोलिए", "target": "Nothing much", "accept": ["nothing much"], "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब हल्की-फुल्की बातचीt में भी आप सहज जवाब दे सकते हैं!", "phrases_learned": ["How's it going?", "Going well.", "Pretty good.", "What's up?", "Nothing much."] }
+      },
+
+      {
+        "id": "1.6",
+        "title_en": "Goodbyes",
+        "title_l1": "विदाई",
+        "micro_skill_l1": "गर्मजोशी से विदा लेना और विदाई का जवाब देना।",
+        "status": "complete",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "जाते समय सिर्फ़ 'Bye' नहीं — और भी सहज तरीके हैं। चलिए सीखते हैं।", "audio": "audio/hi/s1_6_warmup.mp3" },
+        "teach": [
+          { "id": "ph_byes", "type": "phrase_set", "prompt_l1": "विदा लेने के सहज तरीके:",
+            "items": [
+              { "en": "Bye!", "l1": "अलविदा!", "audio": "audio/en/bye.mp3" },
+              { "en": "See you!", "l1": "फिर मिलते हैं!", "audio": "audio/en/see_you.mp3" },
+              { "en": "Take care!", "l1": "अपना ख़याल रखना!", "audio": "audio/en/take_care.mp3" }
+            ]
+          },
+          { "id": "ex_see_you_later", "type": "exchange", "prompt_en": "See you later!", "prompt_l1": "बाद में मिलते हैं!", "prompt_audio": "audio/en/see_you_later.mp3",
+            "responses": [
+              { "en": "See you!", "l1": "फिर मिलते हैं!", "register_l1": "सबसे आम।", "audio": "audio/en/see_you.mp3" },
+              { "en": "Take care!", "l1": "ख़याल रखना!", "register_l1": "गर्मजोशी से।", "audio": "audio/en/take_care.mp3" },
+              { "en": "Bye, see you!", "l1": "अलविदा, फिर मिलेंगे!", "register_l1": "दोनों साथ।", "audio": "audio/en/bye_see_you.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "1.6.p1", "type": "speak_the_picture", "instruction_l1": "तस्वीर देखिए — कोई जा रहा है। विदा बोलिए", "image": "img/s1/waving_bye.webp", "target": "Bye", "accept": ["bye", "see you", "take care", "bye bye", "goodbye"], "open_ended": true, "hint_l1": "'Bye' या 'See you'।", "fallback": { "type": "tap", "options": ["Bye", "Hello", "Sorry", "Thanks"] }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.6.p2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "See you later!", "audio": "audio/en/see_you_later.mp3", "accept": ["see you", "take care", "bye see you", "bye", "see you later"], "open_ended": true, "hint_l1": "'See you!' काफ़ी है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.6.p3", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए", "audio": "audio/en/take_care.mp3", "target": "Take care", "accept": ["take care"], "pace": "slow", "hint_l1": "'टेक केयर'", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.6.p4", "type": "role_play_turn", "instruction_l1": "विदा लीजिए", "scenario_l1": "मित्थू हाथ हिलाते हुए: 'Okay, see you later!'", "ai_line_en": "Okay, see you later!", "ai_line_audio": "audio/en/okay_see_you_later.mp3", "accept": ["see you", "take care", "bye see you", "bye"], "open_ended": true, "exchanges": 1, "hint_l1": "'See you!' या 'Take care!'", "post_feedback_l1": "बढ़िया! अब आप गर्मजोशी से विदा भी ले सकते हैं।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "1.6.m1", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "See you later!", "accept": ["see you", "take care", "bye see you"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.6.m2", "type": "speak_the_picture", "instruction_l1": "विदा बोलिए", "image": "img/s1/waving_bye.webp", "target": "Bye", "accept": ["bye", "see you", "take care"], "open_ended": true, "fallback": { "type": "tap", "options": ["Bye", "Hello", "Sorry", "Thanks"] } },
+          { "id": "1.6.m3", "type": "repetition_drill", "instruction_l1": "बोलिए", "target": "Take care", "accept": ["take care"], "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब विदाई भी सिर्फ़ 'Bye' नहीं — 'See you', 'Take care' भी आती है!", "phrases_learned": ["Bye!", "See you!", "Take care!", "See you later!", "Bye, see you!"] }
+      },
+
+      {
+        "id": "1.7",
+        "title_en": "Numbers & colours",
+        "title_l1": "गिनती और रंग",
+        "micro_skill_l1": "गिनती और रंग बोलना — हल्के से बातचीत में भी।",
+        "status": "complete",
+        "note_l1": "यह हल्का शब्द-आधारित सब-स्टेज है, पर बोलकर ही — और छोटे सवाल-जवाब के साथ।",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "गिनती और रंग — रोज़ काम आते हैं। बोलकर सीखते हैं।", "audio": "audio/hi/s1_7_warmup.mp3" },
+        "teach": [
+          { "id": "ph_numbers", "type": "phrase_set", "prompt_l1": "गिनती एक से दस तक:",
+            "items": [
+              { "en": "One", "l1": "एक", "audio": "audio/en/one.mp3" },
+              { "en": "Two", "l1": "दो", "audio": "audio/en/two.mp3" },
+              { "en": "Three", "l1": "तीन", "audio": "audio/en/three.mp3" },
+              { "en": "Four", "l1": "चार", "audio": "audio/en/four.mp3" },
+              { "en": "Five", "l1": "पाँच", "audio": "audio/en/five.mp3" },
+              { "en": "Six", "l1": "छह", "audio": "audio/en/six.mp3" },
+              { "en": "Seven", "l1": "सात", "audio": "audio/en/seven.mp3" },
+              { "en": "Eight", "l1": "आठ", "audio": "audio/en/eight.mp3" },
+              { "en": "Nine", "l1": "नौ", "audio": "audio/en/nine.mp3" },
+              { "en": "Ten", "l1": "दस", "audio": "audio/en/ten.mp3" }
+            ]
+          },
+          { "id": "ph_colours", "type": "phrase_set", "prompt_l1": "आम रंग:",
+            "items": [
+              { "en": "Red", "l1": "लाल", "audio": "audio/en/red.mp3" },
+              { "en": "Blue", "l1": "नीला", "audio": "audio/en/blue.mp3" },
+              { "en": "Green", "l1": "हरा", "audio": "audio/en/green.mp3" },
+              { "en": "Yellow", "l1": "पीला", "audio": "audio/en/yellow.mp3" },
+              { "en": "Black", "l1": "काला", "audio": "audio/en/black.mp3" },
+              { "en": "White", "l1": "सफ़ेद", "audio": "audio/en/white.mp3" }
+            ]
+          }
+        ],
+        "practice": [
+          { "id": "1.7.p1", "type": "speak_the_picture", "instruction_l1": "रंग बोलिए", "image": "img/s1/colour_red.webp", "target": "Red", "accept": ["red"], "hint_l1": "लाल = ?", "fallback": { "type": "tap", "options": ["Red", "Blue", "Green", "Black"] }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.7.p2", "type": "speak_the_picture", "instruction_l1": "रंग बोलिए", "image": "img/s1/colour_blue.webp", "target": "Blue", "accept": ["blue"], "hint_l1": "नीला = ?", "fallback": { "type": "tap", "options": ["Blue", "Green", "Yellow", "White"] }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.7.p3", "type": "listen_and_respond", "instruction_l1": "गिनिए — कितने? बोलिए", "prompt_en": "How many? (three dots shown)", "prompt_l1": "कितने? (तीन बिंदु)", "image": "img/s1/numbers_1_10.webp", "target": "Three", "accept": ["three", "3"], "hint_l1": "तीन = ?", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } },
+          { "id": "1.7.p4", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "What colour is it?", "prompt_l1": "यह किस रंग का है?", "image": "img/s1/colour_green.webp", "target": "It's green.", "accept": ["it's green", "its green", "green"], "open_ended": true, "hint_l1": "'It's green' या सिर्फ़ 'Green'।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.7.p5", "type": "repetition_drill", "instruction_l1": "एक से पाँच तक गिनिए", "audio": "audio/en/one_to_five.mp3", "target": "One two three four five", "accept": ["one two three four five", "1 2 3 4 5"], "pace": "slow", "hint_l1": "धीरे-धीरे: One… Two… Three…", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "1.7.m1", "type": "speak_the_picture", "instruction_l1": "रंग बोलिए", "image": "img/s1/colour_yellow.webp", "target": "Yellow", "accept": ["yellow"], "fallback": { "type": "tap", "options": ["Yellow", "Red", "Blue", "White"] } },
+          { "id": "1.7.m2", "type": "listen_and_respond", "instruction_l1": "कितने? बोलिए (पाँच)", "prompt_l1": "कितने? (पाँच)", "target": "Five", "accept": ["five", "5"], "fallback": { "type": "text" } },
+          { "id": "1.7.m3", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "What colour is it?", "image": "img/s1/colour_black.webp", "target": "It's black.", "accept": ["it's black", "black"], "open_ended": true, "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "अब आप गिनती और रंग बोल सकते हैं — और छोटे सवालों के जवाब भी!", "phrases_learned": ["One–Ten", "Red, Blue, Green, Yellow, Black, White", "It's red.", "How many? / Three."] }
+      },
+
+      {
+        "id": "1.8",
+        "title_en": "Your first conversation",
+        "title_l1": "आपकी पहली बातचीत",
+        "micro_skill_l1": "अब तक सीखा सब जोड़कर एक पूरी छोटी बातचीत करना।",
+        "status": "complete",
+        "note_l1": "रिव्यू सब-स्टेज: 1.1–1.7 के टुकड़े जोड़कर एक असली बातचीत। हर turn अलग role_play_turn है (MVP single-exchange), पर एक के बाद एक चलकर पूरी बातचीत जैसा महसूस होता है।",
+        "warmup": { "type": "recall_prompt", "prompt_l1": "अब तक आपने बहुत कुछ सीखा! आज सब जोड़कर एक पूरी बातचीत करते हैं — जैसे असल ज़िंदगी में।", "audio": "audio/hi/s1_8_warmup.mp3" },
+        "teach": [
+          { "id": "convo_map", "type": "note", "prompt_l1": "एक आम मुलाक़ात ऐसे चलती है: अभिवादन → हालचाल → नाम → विदा। चलिए करके देखते हैं।" }
+        ],
+        "practice": [
+          { "id": "1.8.p1", "type": "role_play_turn", "instruction_l1": "मित्थू मिला — जवाब बोलिए", "scenario_l1": "बातचीत शुरू।", "ai_line_en": "Hello! How are you?", "ai_line_audio": "audio/en/hello_how_are_you.mp3", "accept": ["i'm good thank you", "all good", "fine thanks and you", "good"], "open_ended": true, "exchanges": 1, "hint_l1": "हालचाल का जवाब।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.8.p2", "type": "role_play_turn", "instruction_l1": "अब वह आपका नाम पूछ रहा है", "scenario_l1": "बातचीत जारी।", "ai_line_en": "Nice! What's your name?", "ai_line_audio": "audio/en/nice_whats_your_name.mp3", "accept_frames": ["i'm *", "my name is *"], "open_ended": true, "name_field": true, "exchanges": 1, "hint_l1": "अपना नाम बताइए।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
+          { "id": "1.8.p3", "type": "role_play_turn", "instruction_l1": "अब विदा का समय", "scenario_l1": "बातचीत ख़त्म।", "ai_line_en": "Great talking to you. See you later!", "ai_line_audio": "audio/en/great_talking_see_you_later.mp3", "accept": ["see you", "take care", "bye see you", "bye", "you too see you"], "open_ended": true, "exchanges": 1, "hint_l1": "'See you!' या 'Take care!'", "post_feedback_l1": "आपने पूरी बातचीत कर ली — शुरू से आख़िर तक! यही तो हमारा लक्ष्य था।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } }
+        ],
+        "mastery_check": [
+          { "id": "1.8.m1", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "How are you?", "accept": ["i'm good thank you", "all good", "fine thanks and you"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.8.m2", "type": "listen_and_respond", "instruction_l1": "जवाब बोलिए", "prompt_en": "Thank you!", "accept": ["you're welcome", "no problem", "anytime"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.8.m3", "type": "listen_and_respond", "instruction_l1": "विदा बोलिए", "prompt_en": "See you later!", "accept": ["see you", "take care", "bye see you"], "open_ended": true, "fallback": { "type": "text" } },
+          { "id": "1.8.m4", "type": "listen_and_respond", "instruction_l1": "अपना नाम बताइए", "prompt_en": "What's your name?", "open_ended": true, "name_field": true, "accept_frames": ["i'm *", "my name is *"], "fallback": { "type": "text" } }
+        ],
+        "recap": { "message_l1": "बधाई हो! आपने Stage 1 पूरा किया — अब आप अभिवादन, हालचाल, नाम, शुक्रिया, हाँ/ना, हल्की बातचीत और विदा, सब बोल सकते हैं। Riya, आपने कर दिखाया!", "phrases_learned": ["पूरी बातचीत: Hello → How are you → name → See you!"] }
+      }
+    ]
+  }
+}
