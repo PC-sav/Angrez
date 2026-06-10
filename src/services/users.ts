@@ -9,6 +9,7 @@ export interface User {
   level: number;
   goal: string | null;
   google_id: string | null;
+  referral_code: string;
   created_at: Date;
 }
 

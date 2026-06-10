@@ -4,7 +4,8 @@ import { verifyGoogleToken } from "../services/google";
 import { findOrCreateByGoogle } from "../services/users";
 import { signJwt } from "../services/jwt";
 import { requireAuth } from "../middleware/auth";
-import { AppError, errResponse } from "../lib/errors";
+import { AppError, errResponse, isConnectionError } from "../lib/errors";
+import { resolveReferralCode, captureReferral } from "../services/referrals";
 
 const router = Router();
 
@@ -13,6 +14,13 @@ const router = Router();
 function handleError(err: unknown, res: Response): void {
   if (err instanceof AppError) {
     res.status(err.statusCode).json(errResponse(err.code, err.message));
+    return;
+  }
+  if (isConnectionError(err)) {
+    res
+      .set("Retry-After", "5")
+      .status(503)
+      .json(errResponse("SERVICE_UNAVAILABLE", "Service temporarily unavailable, please retry."));
     return;
   }
   console.error("Unhandled auth error:", err);
@@ -80,6 +88,23 @@ router.post(
       }
 
       const result = await verifyOtp(normalized, code);
+
+      // Capture referral for brand-new users. Non-fatal: a DB error here must
+      // never prevent the client from receiving their auth token.
+      if (result.isNewUser) {
+        const { referral_code } = req.body as Record<string, unknown>;
+        if (typeof referral_code === "string" && referral_code.trim()) {
+          try {
+            const referrerId = await resolveReferralCode(referral_code.trim());
+            if (referrerId) {
+              await captureReferral(referrerId, (result.user as { id: string }).id, referral_code.trim());
+            }
+          } catch (refErr) {
+            console.error("Referral capture non-fatal:", refErr);
+          }
+        }
+      }
+
       res.json(result);
     } catch (err) {
       handleError(err, res);
