@@ -2,7 +2,7 @@
 
 Session date: 2026-06-10  
 Source doc: Angrez_Step1-5_QA_Audit_Handoff  
-**Suite status: 177/177 passing** (verified by full `vitest run`)
+**Suite status: 184/184 passing** (verified by full `vitest run`)
 
 ---
 
@@ -12,11 +12,13 @@ Audit is NOT signed off. 177/177 green, but the highest-stakes
 money-path items are still open — defer was end-of-session, not a
 considered drop.
 
-Required (these block sign-off):
-- MP-1 — parallel-race idempotency. The realistic double-fire on weak
-  signal; the entire reason the ledger exists. Non-negotiable.
-- MP-7 — voice-bonus regression. Money awarded on substage unlock.
-- MP-9 — daily_open ledger write. See reconciliation note below.
+Required blockers — NOW RESOLVED:
+- MP-1 ✅ — parallel-race idempotency. Commit `9605643`.
+- MP-7 ✅ — substage-complete bonus + daily_open guard. Commit `34f96e4`.
+- MP-9 ✅ — no-direct-writes static guard. Commit `af8ee33`.
+
+Sign-off condition MET: 184/184 green, all four ⚠️ bugs committed under
+audit(...) messages, MP-1/MP-7/MP-9 green, no-direct-writes guard confirmed.
 
 Same pass, nice-to-have:
 - MP-2 — substage key (sequential duplicate).
@@ -36,8 +38,7 @@ MP-9 reconciliation: handoff MP-9 = "no direct balance writes anywhere"
 no-direct-writes guard is covered somewhere; if not, it stays open —
 that structural guarantee is the one least safe to lose.
 
-Sign-off condition: MP-1, MP-7, MP-9 green + no-direct-writes guard
-confirmed + all four ⚠️ fixes committed under audit(...) messages.
+Sign-off condition: MET — 184/184 green, all blockers resolved.
 
 ---
 
@@ -45,16 +46,18 @@ confirmed + all four ⚠️ fixes committed under audit(...) messages.
 
 | Item | Status | Test / File |
 |------|--------|-------------|
+| MP-1 Parallel-race idempotency + 503/500 routing | ✅ | `tests/money.test.ts` — "(a) parallel same key → 1 ledger row; (b) transient→503; (c) retry after 503→is_retry; (d) logic→500"; commits `9605643` |
 | MP-3 Client-side idempotency_key contract | ✅ | `tests/money.test.ts` — "retry with the same key … returns original award, no second credit" + "static: idempotency_key is read from req.body" |
 | MP-4 Pool exhaustion atomicity | ✅ | `tests/money.test.ts` — "exhausted pool on /puzzles/result → 503, no ledger row written" |
 | MP-6 Degenerate point values clamped | ✅ | `tests/money.test.ts` — "pack with puzzle_base=-10 awards 0 points" + "used_voice=true still 0" + "client-sent points ignored"; source fix commit `dd89105` |
+| MP-7 substage-complete bonus idempotent + daily_open guard | ✅ | `tests/money.test.ts` — "exactly ONE sub_stage_complete row" + "second call→points_awarded=0" + "daily_open=0, no daily_open row"; commit `34f96e4` |
 | MP-8 Mastery boundary | ✅ | `tests/money.test.ts` — 6/10=false, 7/10=true (boundary), 8/10=true + static rule pin |
 | MP-9 No direct balance writes (static guard) | ✅ | `tests/money.test.ts` — "MP-9 — No direct writes to wallet_ledger or wallet_balances in src/" (3 tests); commit `af8ee33` |
 | MP-10 Read path = write path | ✅ | `tests/money.test.ts` — "wallet_balances view == raw SUM", multi-insert consistency, API balance == view balance |
 
-**Note — MP-9 reconciliation:** The handoff defined MP-9 as the "no direct balance writes" structural guarantee. This was previously tracked as "daily_open=0 no bonus" — that was wrong. The no-direct-writes guard has been added (`af8ee33`). The daily_open bonus path is a separate, still-open item (grouped with MP-7 below).
+**Note — MP-9 reconciliation:** The handoff defined MP-9 as the "no direct balance writes" structural guarantee. This was previously tracked as "daily_open=0 no bonus" — that was wrong. The no-direct-writes guard has been added (`af8ee33`). The daily_open bonus path is covered by MP-7 above.
 
-**Blocks sign-off:** MP-1 (parallel race idempotency), MP-7 (voice-bonus regression + daily_open bonus), MP-2 (substage key), MP-5 (pack-not-found 404).
+**Blocks sign-off:** MP-2 (substage key, nice-to-have), MP-5 (pack-not-found 404, nice-to-have).
 
 ---
 
@@ -124,16 +127,16 @@ All CL items complete.
 | `tests/matcher.test.ts` | 56 |
 | `tests/audit.test.ts` | 16 |
 | `tests/robustness.test.ts` | 15 |
-| `tests/money.test.ts` | 16 |
+| `tests/money.test.ts` | 23 |
 | `tests/auth.test.ts` | 12 |
 | `tests/learning.test.ts` | 12 |
 | `tests/lint-content.test.ts` | 16 |
 | `tests/pool_timeout.test.ts` | 10 |
 | `tests/schema.test.ts` | 3 |
 | `tests/content.test.ts` | 8 |
-| **Total** | **177** |
+| **Total** | **184** |
 
-Audit-new tests (this session): 16 (money, incl. MP-9) + 12 (matcher audit blocks) + 16 (lint-content) + 3 (IN-1 in audit) + 2 (AU-3, AU-6 in auth) = **49 new tests**
+Audit-new tests (this session): 23 (money, incl. MP-1/MP-7/MP-9) + 12 (matcher audit blocks) + 16 (lint-content) + 3 (IN-1 in audit) + 2 (AU-3, AU-6 in auth) = **56 new tests**
 
 ---
 
@@ -152,8 +155,6 @@ Audit-new tests (this session): 16 (money, incl. MP-9) + 12 (matcher audit block
 
 | Item | Status | Reason |
 |------|--------|--------|
-| MP-1 parallel race idempotency | ☐ blocks sign-off | Requires concurrent HTTP requests; not yet written |
-| MP-7 voice-bonus regression + daily_open bonus | ☐ blocks sign-off | Not yet written |
 | MP-2 substage key (sequential duplicate) | ☐ nice-to-have | Not yet written |
 | MP-5 pack-not-found 404 | ☐ nice-to-have | Not yet written |
 | IN-4 production smoke | ☐ blocked | `SMS_PROVIDER=exotel` on Railway → OTP returns INTERNAL_ERROR. Fix: set `SMS_PROVIDER=stub` in Railway dashboard |
