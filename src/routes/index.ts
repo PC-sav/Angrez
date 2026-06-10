@@ -2,6 +2,8 @@ import { Router, Request, Response } from "express";
 import { version } from "../../package.json";
 import authRouter from "./auth";
 import contentRouter from "./content";
+import learningRouter from "./learning";
+import walletRouter from "./wallet";
 
 const router = Router();
 
@@ -19,5 +21,7 @@ router.get("/health", (_req: Request, res: Response) => {
 
 router.use("/auth", authRouter);
 router.use("/content", contentRouter);
+router.use("/wallet", walletRouter);
+router.use("/", learningRouter);
 
 export default router;
