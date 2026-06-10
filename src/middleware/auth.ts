@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { verifyJwt } from "../services/jwt";
 import { findUserById } from "../services/users";
-import { errResponse } from "../lib/errors";
+import { errResponse, isConnectionError } from "../lib/errors";
 
 export async function requireAuth(
   req: Request,
@@ -28,7 +28,14 @@ export async function requireAuth(
     }
     req.user = user;
     next();
-  } catch {
+  } catch (err) {
+    if (isConnectionError(err)) {
+      res
+        .set("Retry-After", "5")
+        .status(503)
+        .json(errResponse("SERVICE_UNAVAILABLE", "Service temporarily unavailable, please retry."));
+      return;
+    }
     res
       .status(401)
       .json(errResponse("INVALID_TOKEN", "Invalid or expired token."));
