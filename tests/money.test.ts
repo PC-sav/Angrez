@@ -11,9 +11,10 @@
 import "dotenv/config";
 import { randomUUID, randomInt } from "crypto";
 import { readFileSync } from "fs";
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import request from "supertest";
 import appPool from "../src/lib/db";
+import * as learningService from "../src/services/learning";
 import app from "../src/app";
 import { signJwt } from "../src/services/jwt";
 
@@ -436,5 +437,117 @@ describe("MP-9 — No direct writes to wallet_ledger or wallet_balances in src/"
       'grep -rn --include="*.ts" "INSERT\\|UPDATE\\|DELETE" /Users/Pratap1/angrez/src/ | grep "wallet_balances" || true',
     ).toString();
     expect(out.trim()).toBe("");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MP-1  Parallel-race idempotency + 503/500 routing
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("MP-1 — parallel duplicate idempotency_key", () => {
+  it("(a) two parallel identical requests → ONE ledger row; both responses return the same award", async () => {
+    const key = randomUUID();
+    const body = puzzleBody({ idempotency_key: key });
+
+    const [r1, r2] = await Promise.all([
+      request(app).post("/api/puzzles/result").set(auth()).send(body),
+      request(app).post("/api/puzzles/result").set(auth()).send(body),
+    ]);
+
+    expect(r1.status).toBe(200);
+    expect(r2.status).toBe(200);
+    expect(r1.body.points_awarded).toBe(r2.body.points_awarded);
+
+    const { rows } = await appPool.query<{ cnt: number }>(
+      "SELECT COUNT(*)::int AS cnt FROM wallet_ledger WHERE idempotency_key = $1",
+      [key],
+    );
+    expect(rows[0].cnt).toBe(1);
+  });
+
+  it("(b) transient db error → 503, not 500 or 401", async () => {
+    const opts = (appPool as unknown as PoolWithOptions).options;
+    const origTimeout = opts.connectionTimeoutMillis;
+    const held: PoolClient[] = [];
+    for (let i = 0; i < 5; i++) held.push(await appPool.connect());
+    opts.connectionTimeoutMillis = 400;
+
+    let res: Awaited<ReturnType<typeof request>>;
+    try {
+      res = await request(app)
+        .post("/api/puzzles/result")
+        .set(auth())
+        .send(puzzleBody());
+    } finally {
+      opts.connectionTimeoutMillis = origTimeout;
+      held.forEach((c) => c.release());
+    }
+
+    expect(res!.status).toBe(503);
+    expect(res!.body.error.code).toBe("SERVICE_UNAVAILABLE");
+    expect(res!.headers["retry-after"]).toBe("5");
+  }, 12000);
+
+  it("(c) after a 503, retry with the SAME key → zero additional ledger rows, original award returned", async () => {
+    // Step 1: successful write so there IS an existing row to find on retry.
+    const key = randomUUID();
+    const body = puzzleBody({ idempotency_key: key });
+    const first = await request(app).post("/api/puzzles/result").set(auth()).send(body);
+    expect(first.status).toBe(200);
+    const originalAward = first.body.points_awarded as number;
+
+    // Step 2: pool exhausted → 503 for the same key.
+    // The existing row is untouched; the pool failure happens before any DB write.
+    const opts = (appPool as unknown as PoolWithOptions).options;
+    const origTimeout = opts.connectionTimeoutMillis;
+    const held: PoolClient[] = [];
+    for (let i = 0; i < 5; i++) held.push(await appPool.connect());
+    opts.connectionTimeoutMillis = 400;
+    let errRes: Awaited<ReturnType<typeof request>>;
+    try {
+      errRes = await request(app).post("/api/puzzles/result").set(auth()).send(body);
+    } finally {
+      opts.connectionTimeoutMillis = origTimeout;
+      held.forEach((c) => c.release());
+    }
+    expect(errRes!.status).toBe(503);
+
+    // Step 3: retry after 503 — must find the original row, no second credit.
+    const retry = await request(app).post("/api/puzzles/result").set(auth()).send(body);
+    expect(retry.status).toBe(200);
+    expect(retry.body.is_retry).toBe(true);
+    expect(retry.body.points_awarded).toBe(originalAward);
+
+    const { rows } = await appPool.query<{ cnt: number }>(
+      "SELECT COUNT(*)::int AS cnt FROM wallet_ledger WHERE idempotency_key = $1",
+      [key],
+    );
+    expect(rows[0].cnt).toBe(1);
+  }, 15000);
+
+  it("(d) logic db error → 500, not 503; no Retry-After header", async () => {
+    // Spy on recordPuzzleResult so requireAuth runs normally (auth unaffected)
+    // and only the service call throws a non-transient error.
+    const logicErr = Object.assign(
+      new Error("relation does not exist"),
+      { code: "42P01" }, // undefined_table — absent from TRANSIENT_PG_CODES
+    );
+    const spy = vi
+      .spyOn(learningService, "recordPuzzleResult")
+      .mockRejectedValueOnce(logicErr as never);
+
+    let res: Awaited<ReturnType<typeof request>>;
+    try {
+      res = await request(app)
+        .post("/api/puzzles/result")
+        .set(auth())
+        .send(puzzleBody());
+    } finally {
+      spy.mockRestore();
+    }
+
+    expect(res!.status).toBe(500);
+    expect(res!.body.error.code).toBe("INTERNAL");
+    expect(res!.headers["retry-after"]).toBeUndefined();
   });
 });
