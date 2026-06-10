@@ -31,17 +31,38 @@ export interface MatchResult {
 
 // ── Normalisation ─────────────────────────────────────────────────────────────
 
+// Leading ASR filler words — stripped only at the very start of the string.
+const FILLER_RE = /^(?:um+|uh+|hmm+|er+)[,\s]+/i;
+
+// Spoken long-form → normalised canonical form (applied after lowercase).
+// Lets "I am" and "I’m" map to the same normalised token "im".
+const CONTRACTIONS: Array<[RegExp, string]> = [
+  [/\bi am\b/g, "im"],
+  [/\byou are\b/g, "youre"],
+  [/\bhe is\b/g, "hes"],
+  [/\bshe is\b/g, "shes"],
+  [/\bit is\b/g, "its"],
+  [/\bthey are\b/g, "theyre"],
+  [/\bthat is\b/g, "thats"],
+];
+
 /**
  * Normalise a transcript or accept string for comparison:
+ *   - Unicode NFC (MA-1: Devanagari NFC ≡ NFD after this step)
  *   - lowercase
+ *   - strip leading ASR filler ("um,", "uh ")
+ *   - expand contractions ("I am" → same token as "I’m")
  *   - strip apostrophes, common punctuation, curly quotes
  *   - collapse runs of whitespace to a single space
  *   - trim
  */
 export function normalise(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[.,!?;:'"'‘’“”…\-–—]+/g, "")
+  let t = s.normalize("NFC").toLowerCase().replace(FILLER_RE, "");
+  for (const [pattern, replacement] of CONTRACTIONS) {
+    t = t.replace(pattern, replacement);
+  }
+  return t
+    .replace(/['"‘’“”.,!?;:…\-–—]+/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
