@@ -551,3 +551,121 @@ describe("MP-1 — parallel duplicate idempotency_key", () => {
     expect(res!.headers["retry-after"]).toBeUndefined();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MP-7  substage-complete bonus idempotent + daily_open guard
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("MP-7 — substage-complete bonus idempotent + daily_open guard", () => {
+  // Fresh user + pack per run so no state leaks from MP-8's SS_ABOVE completion.
+  const USER_MP7 = randomUUID();
+  const PHONE_MP7 = `+91${randomInt(6_000_000_000, 9_999_999_999)}`;
+  const STAGE_MP7 = 9907;
+  const SS_MP7 = "9907.1";
+  const IDEM_KEY_MP7 = `substage:${USER_MP7}:${SS_MP7}`;
+  let tokenMp7: string;
+  function authMp7() { return { Authorization: `Bearer ${tokenMp7}` }; }
+
+  beforeAll(async () => {
+    await appPool.query(
+      `INSERT INTO users (id, phone, language, level)
+       VALUES ($1, $2, 'hi', 1) ON CONFLICT (id) DO NOTHING`,
+      [USER_MP7, PHONE_MP7],
+    );
+    const pack = {
+      stage: STAGE_MP7, version: 1, language: "hi", mastery_threshold: 0.7,
+      points: { puzzle_base: 5, voice_bonus: 3, sub_stage_complete: 20,
+                sub_stage_perfect_bonus: 10, bravery_bonus: 0, daily_open: 0 },
+      feedback: { celebrate_l1: ["great!"], good_effort_l1: "ok", almost_l1: "ok",
+                  heard_prefix_l1: "", mic_broken_l1: "", noise_high_l1: "",
+                  silence_l1: "", ready_to_listen_l1: "" },
+      sub_stages: [{
+        id: SS_MP7, title_en: "MP7 SS", teach: [],
+        practice: [{ id: "9907.1.p1", open_ended: true }],
+      }],
+    };
+    await appPool.query(
+      `INSERT INTO content_packs (stage, version, language, json, published_at)
+       VALUES ($1, 1, 'hi', $2::jsonb, now())
+       ON CONFLICT (stage, version, language) DO UPDATE SET json = EXCLUDED.json`,
+      [STAGE_MP7, JSON.stringify(pack)],
+    );
+    // 7 correct + 3 incorrect = 70% mastery (at threshold, isPerfect=false).
+    // This tests the base sub_stage_complete path without triggering perfect bonus.
+    for (let i = 0; i < 7; i++) {
+      await appPool.query(
+        `INSERT INTO puzzle_results (user_id, sub_stage_id, puzzle_id, used_voice, correct, transcript, points_awarded)
+         VALUES ($1, $2, '9907.1.p1', false, true, 'ok', 5)`,
+        [USER_MP7, SS_MP7],
+      );
+    }
+    for (let i = 0; i < 3; i++) {
+      await appPool.query(
+        `INSERT INTO puzzle_results (user_id, sub_stage_id, puzzle_id, used_voice, correct, transcript, points_awarded)
+         VALUES ($1, $2, '9907.1.p1', false, false, 'wrong', 0)`,
+        [USER_MP7, SS_MP7],
+      );
+    }
+    tokenMp7 = signJwt({ sub: USER_MP7, phone: PHONE_MP7 });
+  });
+
+  afterAll(async () => {
+    await appPool.query("DELETE FROM puzzle_results WHERE user_id = $1", [USER_MP7]);
+    await appPool.query("DELETE FROM progress WHERE user_id = $1", [USER_MP7]);
+    await appPool.query("DELETE FROM content_packs WHERE stage = $1", [STAGE_MP7]);
+    // wallet_ledger rows are intentionally left: the append-only trigger prevents
+    // DELETE, and ON DELETE RESTRICT on users.id blocks user cleanup while those
+    // rows exist. USER_MP7 is a per-run UUID so orphaned rows have no effect.
+  });
+
+  it("completing substage at mastery ≥ 0.70 writes exactly ONE sub_stage_complete ledger row", async () => {
+    const res = await request(app)
+      .post("/api/substage/complete")
+      .set(authMp7())
+      .send({ sub_stage_id: SS_MP7 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.mastered).toBe(true);
+    expect(res.body.points_awarded).toBe(20); // pack.points.sub_stage_complete
+
+    const { rows } = await appPool.query<{ cnt: number }>(
+      "SELECT COUNT(*)::int AS cnt FROM wallet_ledger WHERE idempotency_key = $1",
+      [IDEM_KEY_MP7],
+    );
+    expect(rows[0].cnt).toBe(1);
+  });
+
+  it("calling /substage/complete twice for the same sub-stage → no second bonus row, points_awarded=0", async () => {
+    // First call was made in the test above; alreadyAwarded=true now.
+    const res = await request(app)
+      .post("/api/substage/complete")
+      .set(authMp7())
+      .send({ sub_stage_id: SS_MP7 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.mastered).toBe(true);
+    expect(res.body.points_awarded).toBe(0); // alreadyAwarded branch → no second credit
+
+    const { rows } = await appPool.query<{ cnt: number }>(
+      "SELECT COUNT(*)::int AS cnt FROM wallet_ledger WHERE idempotency_key = $1",
+      [IDEM_KEY_MP7],
+    );
+    expect(rows[0].cnt).toBe(1); // still exactly one
+  });
+
+  it("daily_open: pack.points.daily_open=0; no daily_open ledger row is written on complete", async () => {
+    const { rows: packRows } = await appPool.query<{
+      json: { points: { daily_open: number } };
+    }>(
+      "SELECT json FROM content_packs WHERE stage = $1 AND language = 'hi'",
+      [STAGE_MP7],
+    );
+    expect(packRows[0].json.points.daily_open).toBe(0);
+
+    const { rows } = await appPool.query<{ cnt: number }>(
+      "SELECT COUNT(*)::int AS cnt FROM wallet_ledger WHERE user_id = $1 AND reason = 'daily_open'",
+      [USER_MP7],
+    );
+    expect(rows[0].cnt).toBe(0);
+  });
+});
