@@ -1,8 +1,8 @@
-# QA Audit Progress — Steps 1–5
+# QA Audit Progress — Steps 1–6
 
 Session date: 2026-06-10  
 Source doc: Angrez_Step1-5_QA_Audit_Handoff  
-**Suite status: 184/184 passing** (verified by full `vitest run`)
+**Suite status: 203/203 passing** (verified by full `vitest run`)
 
 ---
 
@@ -120,7 +120,7 @@ All CL items complete.
 | SH-2 Content lint in CI | ✅ | `package.json` — `"lint:content": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/lint-content.ts"` |
 | SH-3 Test count documentation | ✅ | See counts below |
 
-### SH-3 Test count breakdown (177 total)
+### SH-3 Test count breakdown (203 total)
 
 | File | Tests |
 |------|-------|
@@ -134,9 +134,12 @@ All CL items complete.
 | `tests/pool_timeout.test.ts` | 10 |
 | `tests/schema.test.ts` | 3 |
 | `tests/content.test.ts` | 8 |
-| **Total** | **184** |
+| `tests/wallet.test.ts` | 8 |
+| `tests/referrals.test.ts` | 11 |
+| **Total** | **203** |
 
-Audit-new tests (this session): 23 (money, incl. MP-1/MP-7/MP-9) + 12 (matcher audit blocks) + 16 (lint-content) + 3 (IN-1 in audit) + 2 (AU-3, AU-6 in auth) = **56 new tests**
+Audit-new tests (Steps 1–5): 23 (money) + 12 (matcher) + 16 (lint-content) + 3 (IN-1 in audit) + 2 (AU-3, AU-6 in auth) = **56 new tests**  
+Step 6 additions: 8 (wallet) + 11 (referrals) = **19 new tests**
 
 ---
 
@@ -148,6 +151,43 @@ Audit-new tests (this session): 23 (money, incl. MP-1/MP-7/MP-9) + 12 (matcher a
 | ⚠️ `src/services/learning.ts` | MP-6 | `dd89105` | `Math.max(0, puzzle_base + voice_bonus)` — degenerate packs with negative point values were writing negative ledger entries | Money-adjacent; confirm no awarding path can reach a negative value upstream of the clamp rather than relying on the clamp alone. |
 | ⚠️ `src/services/matcher.ts` | MA-1, MA-2 | `bea67f1` | Added `.normalize('NFC')`, `FILLER_RE` strip, `CONTRACTIONS` expansion, and ASCII apostrophe (0x27) in punct regex — prior write used curly-quote delimiters making `I'm` fail to normalise | Correct answers (Hindi NFC, English contractions) were scored wrong. Confidence-first breaking in prod — a trust bug, not a money bug. The matcher's whole job. |
 | ⚠️ `src/middleware/auth.ts` | IN-5 | `8ca51b5` | Added `isConnectionError` check before the 401 fallback — pool exhaustion inside `findUserById` was returning 401 instead of 503 | Hid real errors behind a generic 503, so the client couldn't tell "matcher passed but award didn't persist, safe to retry" from "server broke." That is exactly the masking that lets a money-path bug go invisible. Verify the fix surfaces a distinguishable signal — interacts with MP-1/MP-4. |
+
+---
+
+## Step 6 — Wallet read + Referral capture + credit logic
+
+Commits: `feat(wallet)` → `2af776f`, `feat(migration-004)` → `a8d62fc`, `feat(referrals)` → `3769f4e`.
+
+### Part A — GET /wallet
+
+| What | Detail |
+|------|--------|
+| Endpoint | `GET /api/wallet` — requireAuth, reads `wallet_balances` VIEW + paginated `wallet_ledger` |
+| Guards | limit capped at 50; offset validated; no INSERT/UPDATE/DELETE in route (static test) |
+| Tests (8) | balance == SUM, empty → 0+[], newest-first ordering, limit=1, offset pagination no-repeats, limit cap, 401, static no-writes |
+| Status | ✅ 8/8 |
+
+### Part B — Referral capture at signup
+
+| What | Detail |
+|------|--------|
+| `referral_code` column | `GENERATED ALWAYS AS (UPPER(LEFT(REPLACE(id::text,'-',''),12))) STORED` on `users`; 12 hex chars; unique index. Migration `004_referrals.sql`. |
+| `resolveReferralCode` | Looks up by `referral_code` column; returns `null` for unknown codes |
+| `captureReferral` | `INSERT … ON CONFLICT (referred_id) DO NOTHING`; self-referral guard at app layer |
+| Wire-up | `POST /auth/otp/verify` accepts optional `referral_code` body field; capture is non-fatal (auth token always returned) |
+| Tests (7) | resolveReferralCode valid/null, captureReferral pending row, invalid code → no row, self-referral no-op, second referral → first referrer kept; HTTP: valid code → pending row, invalid code → signup succeeds no row |
+| Status | ✅ 7/7 |
+
+### Part C — creditReferral (no call site yet)
+
+| What | Detail |
+|------|--------|
+| `creditReferral(referrerId, refereeId)` | One `wallet_ledger` row (reason=`referral_credit`); idempotency_key=`referral:<r>:<e>`; flips `bonus_state → 'converted'`; `REFERRAL_REWARD_POINTS = 100` |
+| Call site | **NOT wired** — will be called only after a verified PayU ₹99 payment (later step) |
+| Tests (3) | one call → 1 row, 100 pts; two calls → 1 row (idempotent); self-referral → no row |
+| Status | ✅ 3/3 |
+
+**Out of scope (deferred):** PayU webhook + signature verification; the single `creditReferral` call site after verified ₹99 payment; any manual/admin "mark as paid" bypass.
 
 ---
 
