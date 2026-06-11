@@ -17,6 +17,7 @@ function handleError(err: unknown, res: Response): void {
     return;
   }
   if (isConnectionError(err)) {
+    console.error("[diag] connection-class error:", err);
     res
       .set("Retry-After", "5")
       .status(503)
