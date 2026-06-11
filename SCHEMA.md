@@ -33,10 +33,10 @@ One row per OTP send. `code_hash` stores a hash (bcrypt or SHA-256 + salt) of th
 Versioned content blobs. `json` (JSONB) holds sub-stages, puzzles, and audio refs. Unique constraint on `(stage, version, language)` prevents accidental duplicate publish. `published_at` is null for drafts.
 
 ### `progress`
-One row per `(user_id, sub_stage_id)` pair. `mastery_score` is a 0–100 percentage. `updated_at` is bumped automatically by a database trigger on every UPDATE. Foreign key cascades on user delete.
+One row per `(user_id, sub_stage_id)` pair — enforced by a `UNIQUE (user_id, sub_stage_id)` constraint (added in migration 003) which enables safe `ON CONFLICT` upserts. `mastery_score` is a 0–100 percentage. `status` is one of `not_started | in_progress | complete`. `updated_at` is bumped automatically by a database trigger on every UPDATE. Foreign key cascades on user delete.
 
 ### `puzzle_results`
-Immutable result log — one row per attempt. `idempotency_key` on `wallet_ledger` (not here) ensures points are not double-credited even if this row is resubmitted. Index on `user_id`.
+Immutable result log — one row per attempt. `sub_stage_id TEXT NOT NULL` (added in migration 003) links each result to its sub-stage so mastery can be computed. `idempotency_key` on `wallet_ledger` (not here) ensures points are not double-credited even if this row is resubmitted. Index on `user_id`.
 
 ### `wallet_ledger` ⚠️ APPEND-ONLY
 See the section below. Index on `user_id` (via the FK).

@@ -12,7 +12,9 @@
     "migrate:undo": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/migrate.ts --down",
     "migrate:status": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/migrate.ts --status",
     "seed:content": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/seed-content.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:money": "vitest run tests/money.test.ts tests/robustness.test.ts",
+    "lint:content": "TS_NODE_PROJECT=tsconfig.scripts.json ts-node scripts/lint-content.ts"
   },
   "engines": {
     "node": ">=20"

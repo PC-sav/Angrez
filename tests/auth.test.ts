@@ -11,7 +11,8 @@
  */
 
 import "dotenv/config";
-import { describe, it, expect, afterAll, afterEach } from "vitest";
+import { randomUUID, randomInt } from "crypto";
+import { describe, it, expect, afterAll, afterEach, beforeAll } from "vitest";
 import request from "supertest";
 import pool from "../src/lib/db";
 import app from "../src/app";
@@ -86,6 +87,18 @@ describe("POST /api/auth/otp/request — rate limiting", () => {
       .send({ phone: "12345" });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("INVALID_PHONE");
+  });
+
+  it("AU-3 rate limit clears once old OTP codes are outside the window", async () => {
+    // RL_PHONE already has 3 rows from the first test in this describe block.
+    // Deleting them simulates the rate-limit window passing.
+    await pool.query("DELETE FROM otp_codes WHERE phone = $1", [RL_PHONE]);
+
+    const res = await request(app)
+      .post("/api/auth/otp/request")
+      .send({ phone: RL_PHONE });
+    expect(res.status).toBe(200); // no longer rate-limited
+    expect(res.body.ok).toBe(true);
   });
 });
 
@@ -282,5 +295,47 @@ describe("GET /api/auth/me", () => {
       .set("Authorization", "Bearer notavalidtoken");
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe("INVALID_TOKEN");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AU-6  Valid JWT for a deleted user → 401 USER_NOT_FOUND, not 500
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("AU-6 — GET /api/auth/me for a deleted user", () => {
+  const DELETED_ID = randomUUID();
+  const DELETED_PHONE = `+91${randomInt(6_000_000_000, 9_999_999_999)}`;
+  let deletedToken: string;
+
+  beforeAll(async () => {
+    await pool.query(
+      "INSERT INTO users (id, phone, language, level) VALUES ($1, $2, 'hi', 1)",
+      [DELETED_ID, DELETED_PHONE],
+    );
+    deletedToken = signJwt({ sub: DELETED_ID, phone: DELETED_PHONE });
+  });
+
+  afterAll(async () => {
+    // Best-effort cleanup (user may already be deleted by the test).
+    await pool.query("DELETE FROM users WHERE id = $1", [DELETED_ID]).catch(() => {});
+  });
+
+  it("token is valid before deletion → 200", async () => {
+    const res = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${deletedToken}`);
+    expect(res.status).toBe(200);
+  });
+
+  it("after the user row is deleted, the same token returns 401 USER_NOT_FOUND (not 500)", async () => {
+    await pool.query("DELETE FROM users WHERE id = $1", [DELETED_ID]);
+
+    const res = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${deletedToken}`);
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe("USER_NOT_FOUND");
+    // Confirm it is not an unhandled 500
+    expect(res.status).not.toBe(500);
   });
 });
