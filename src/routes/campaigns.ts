@@ -33,7 +33,7 @@ router.get("/active", requireAuth, async (_req: Request, res: Response): Promise
 
 // POST /api/campaigns/:id/claim
 router.post("/:id/claim", requireAuth, async (req: Request, res: Response): Promise<void> => {
-  const campaignId = req.params.id;
+  const campaignId = req.params.id as string;
   const userId = req.user!.id;
   const userLevel = req.user!.level;
 

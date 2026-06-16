@@ -77,6 +77,7 @@ router.post("/campaigns", requireAdmin, async (req: Request, res: Response): Pro
 
 // PATCH /admin/campaigns/:id
 router.patch("/campaigns/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const campaignId = req.params.id as string;
   const { id: bodyId, type, ...rest } = req.body;
 
   if (bodyId !== undefined || type !== undefined) {
@@ -93,7 +94,7 @@ router.patch("/campaigns/:id", requireAdmin, async (req: Request, res: Response)
   if (ends_at  !== undefined) patch.ends_at  = ends_at;
 
   try {
-    const campaign = await patchCampaign(req.params.id, patch);
+    const campaign = await patchCampaign(campaignId, patch);
     res.json(campaign);
   } catch (err) {
     handleError(err, res);
