@@ -1,0 +1,53 @@
+import { Router, Request, Response } from "express";
+import { requireAuth } from "../middleware/auth";
+import { errResponse, AppError, isConnectionError } from "../lib/errors";
+import { getActiveCampaigns, claimCampaign } from "../services/campaigns";
+
+const router = Router();
+
+function handleError(err: unknown, res: Response): void {
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json(errResponse(err.code, err.message));
+    return;
+  }
+  if (isConnectionError(err)) {
+    res
+      .set("Retry-After", "5")
+      .status(503)
+      .json(errResponse("SERVICE_UNAVAILABLE", "Service temporarily unavailable, please retry."));
+    return;
+  }
+  console.error(err);
+  res.status(500).json(errResponse("INTERNAL", "Internal server error."));
+}
+
+// GET /api/campaigns/active
+router.get("/active", requireAuth, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const campaigns = await getActiveCampaigns();
+    res.json(campaigns);
+  } catch (err) {
+    handleError(err, res);
+  }
+});
+
+// POST /api/campaigns/:id/claim
+router.post("/:id/claim", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const campaignId = req.params.id;
+  const userId = req.user!.id;
+  const userLevel = req.user!.level;
+
+  try {
+    const { grant, already_claimed } = await claimCampaign(campaignId, userId, userLevel);
+    res.json({
+      campaign_id:    grant.campaign_id,
+      award_points:   grant.award_points,
+      granted_at:     grant.granted_at,
+      already_claimed,
+    });
+  } catch (err) {
+    handleError(err, res);
+  }
+});
+
+export default router;
