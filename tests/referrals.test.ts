@@ -187,7 +187,15 @@ describe("Part B — HTTP: referral_code in POST /auth/otp/verify", () => {
       [httpReferrerId, HTTP_REFEREE_PHONE],
     );
     await pool.query("DELETE FROM otp_codes WHERE phone IN ($1, $2)", [HTTP_REFERRER_PHONE, HTTP_REFEREE_PHONE]);
-    await pool.query("DELETE FROM users WHERE phone IN ($1, $2)", [HTTP_REFERRER_PHONE, HTTP_REFEREE_PHONE]);
+    await pool.query(
+      "DELETE FROM first_n_signups WHERE user_id IN (SELECT id FROM users WHERE phone IN ($1, $2))",
+      [HTTP_REFERRER_PHONE, HTTP_REFEREE_PHONE],
+    );
+    try {
+      await pool.query("DELETE FROM users WHERE phone IN ($1, $2)", [HTTP_REFERRER_PHONE, HTTP_REFEREE_PHONE]);
+    } catch {
+      // wallet_ledger FK — test artifact users remain in DB if a campaign claim was made
+    }
   });
 
   it("valid referral_code in OTP verify creates a pending referral row", async () => {
@@ -236,7 +244,15 @@ describe("Part B — HTTP: referral_code in POST /auth/otp/verify", () => {
 
     // Cleanup
     await pool.query("DELETE FROM otp_codes WHERE phone = $1", [EXTRA_PHONE]);
-    await pool.query("DELETE FROM users WHERE phone = $1", [EXTRA_PHONE]);
+    await pool.query(
+      "DELETE FROM first_n_signups WHERE user_id = (SELECT id FROM users WHERE phone = $1)",
+      [EXTRA_PHONE],
+    );
+    try {
+      await pool.query("DELETE FROM users WHERE phone = $1", [EXTRA_PHONE]);
+    } catch {
+      // wallet_ledger FK — test artifact user remains in DB if a campaign claim was made
+    }
   });
 });
 

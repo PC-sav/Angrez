@@ -25,7 +25,19 @@ const PHONE = `+916${String(TS).slice(-9)}`; // valid-looking test number
 
 async function cleanupPhone(phone: string) {
   await pool.query("DELETE FROM otp_codes WHERE phone = $1", [phone]);
-  await pool.query("DELETE FROM users WHERE phone = $1", [phone]);
+  // first_n_signups references users — must be deleted before the user row
+  await pool.query(
+    "DELETE FROM first_n_signups WHERE user_id = (SELECT id FROM users WHERE phone = $1)",
+    [phone],
+  );
+  // User deletion fails if a campaign claim created a wallet_ledger row for this
+  // user (append-only trigger blocks DELETE on wallet_ledger). This can happen
+  // when an active first_n campaign exists in the shared test DB; silently skip.
+  try {
+    await pool.query("DELETE FROM users WHERE phone = $1", [phone]);
+  } catch {
+    // wallet_ledger FK — test artifact user remains in DB, tests still valid
+  }
 }
 
 afterAll(async () => {

@@ -6,6 +6,7 @@ import { signJwt } from "../services/jwt";
 import { requireAuth } from "../middleware/auth";
 import { AppError, errResponse, isConnectionError } from "../lib/errors";
 import { resolveReferralCode, captureReferral } from "../services/referrals";
+import { runFirstNSignupHook } from "../services/campaigns";
 
 const router = Router();
 
@@ -90,19 +91,26 @@ router.post(
 
       const result = await verifyOtp(normalized, code);
 
-      // Capture referral for brand-new users. Non-fatal: a DB error here must
-      // never prevent the client from receiving their auth token.
+      // Non-fatal post-signup hooks: errors must never prevent token delivery.
       if (result.isNewUser) {
+        const newUserId = (result.user as { id: string }).id;
+
         const { referral_code } = req.body as Record<string, unknown>;
         if (typeof referral_code === "string" && referral_code.trim()) {
           try {
             const referrerId = await resolveReferralCode(referral_code.trim());
             if (referrerId) {
-              await captureReferral(referrerId, (result.user as { id: string }).id, referral_code.trim());
+              await captureReferral(referrerId, newUserId, referral_code.trim());
             }
           } catch (refErr) {
             console.error("Referral capture non-fatal:", refErr);
           }
+        }
+
+        try {
+          await runFirstNSignupHook(newUserId);
+        } catch (hookErr) {
+          console.error("First-N signup hook non-fatal:", hookErr);
         }
       }
 
@@ -128,6 +136,14 @@ router.post(
       const profile = await verifyGoogleToken(idToken);
       const { user, isNewUser } = await findOrCreateByGoogle(profile);
       const token = signJwt({ sub: user.id, phone: user.phone ?? "" });
+
+      if (isNewUser) {
+        try {
+          await runFirstNSignupHook(user.id);
+        } catch (hookErr) {
+          console.error("First-N signup hook non-fatal:", hookErr);
+        }
+      }
 
       res.json({ token, user, isNewUser });
     } catch (err) {

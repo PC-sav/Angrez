@@ -1,6 +1,7 @@
 import pool from "../lib/db";
 import { matchAnswer } from "./matcher";
 import { AppError } from "../lib/errors";
+import { runDailyFirstNHook } from "./campaigns";
 
 // ── Pack JSON types ────────────────────────────────────────────────────────────
 
@@ -481,11 +482,19 @@ export async function completeSubStage(userId: string, subStageId: string) {
     );
   }
 
-  return {
+  const result = {
     mastered: true,
     points_awarded: pointsAwarded,
     balance: await getBalance(userId),
     next_sub_stage_id: nextSS?.id ?? null,
     message: pickRandom(pack.feedback.celebrate_l1),
   };
+
+  try {
+    await runDailyFirstNHook(userId);
+  } catch (hookErr) {
+    console.error("[completeSubStage] daily-first-N hook:", hookErr);
+  }
+
+  return result;
 }

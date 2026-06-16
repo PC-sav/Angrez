@@ -227,6 +227,7 @@ export async function createCampaign(body: CreateCampaignBody): Promise<Campaign
 
 // ── 5. Admin: patch ───────────────────────────────────────────────────────────
 
+
 export interface PatchCampaignBody {
   active?: boolean;
   quota?: number | null;
@@ -255,4 +256,115 @@ export async function patchCampaign(
     [active, quota, ends_at, campaignId],
   );
   return rows[0];
+}
+
+// ── 6. Hook: First-N signup ───────────────────────────────────────────────────
+
+// Advisory lock key for signup_rank serialisation.
+// pg_advisory_xact_lock(key) is an application-level mutex released at COMMIT/
+// ROLLBACK. Unlike LOCK TABLE it does not touch the table's metadata lock, so
+// VACUUM, ANALYZE, concurrent index builds and schema inspection are unaffected.
+const FIRST_N_RANK_LOCK = 71697273746e0; // "firstn" mnemonic, fits in float64
+
+/**
+ * Assigns a sequential signup_rank to userId, then claims any active first_n
+ * campaigns for which signupRank <= quota.
+ *
+ * FOR UPDATE cannot serialise here: MAX() on an empty/partially-filled table
+ * returns no lockable rows, so two concurrent transactions both compute rank=1
+ * and both INSERT without conflict (no UNIQUE on signup_rank).
+ * ON CONFLICT retry also requires a UNIQUE(signup_rank) constraint that the
+ * current schema does not have.
+ * An advisory lock serialises all callers of this hook without those constraints.
+ * Callers must wrap in try/catch — errors here must never fail user signup.
+ */
+export async function runFirstNSignupHook(userId: string): Promise<void> {
+  // Only proceed if at least one first_n campaign is currently active.
+  // This prevents first_n_signups from accumulating rows for users who signed
+  // up when no campaign was running.
+  const campaigns = await getActiveCampaigns();
+  const firstNCampaigns = campaigns.filter((c) => c.type === "first_n");
+  if (firstNCampaigns.length === 0) return;
+
+  // Atomically assign signup_rank via advisory lock.
+  const client = await pool.connect();
+  let signupRank: number;
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock($1)", [FIRST_N_RANK_LOCK]);
+    const { rows } = await client.query<{ signup_rank: string }>(
+      `INSERT INTO first_n_signups (user_id, signup_rank)
+       SELECT $1, COALESCE(MAX(signup_rank), 0) + 1 FROM first_n_signups
+       RETURNING signup_rank`,
+      [userId],
+    );
+    await client.query("COMMIT");
+    signupRank = Number(rows[0].signup_rank); // BIGINT → string in pg driver
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  for (const campaign of firstNCampaigns) {
+    if (campaign.quota !== null && signupRank > campaign.quota) continue;
+    try {
+      await claimCampaign(campaign.id, userId, 1); // new users are always level 1
+    } catch {
+      // quota filled between rank assignment and claim — acceptable
+    }
+  }
+}
+
+// ── 7. Hook: Daily-First-N substage completion ────────────────────────────────
+
+/**
+ * Assigns a daily rank per active daily_first_n campaign, then claims if
+ * rank <= daily_quota. Uses the UNIQUE(campaign_id, day, rank) constraint
+ * for race safety via retry-on-conflict rather than a table lock.
+ * Callers must wrap in try/catch — errors here must never fail substage completion.
+ */
+export async function runDailyFirstNHook(userId: string): Promise<void> {
+  const { rows: userRows } = await pool.query<{ level: number }>(
+    "SELECT level FROM users WHERE id = $1",
+    [userId],
+  );
+  const userLevel = userRows[0]?.level ?? 1;
+
+  const campaigns = await getActiveCampaigns();
+  for (const campaign of campaigns) {
+    if (campaign.type !== "daily_first_n" || campaign.daily_quota === null) continue;
+
+    // Idempotency: skip if this user already has a rank today
+    const { rows: existing } = await pool.query<{ rank: number }>(
+      `SELECT rank FROM daily_first_n
+       WHERE user_id = $1 AND campaign_id = $2 AND day = CURRENT_DATE`,
+      [userId, campaign.id],
+    );
+    if (existing[0]) {
+      if (existing[0].rank <= campaign.daily_quota) {
+        try { await claimCampaign(campaign.id, userId, userLevel); } catch {}
+      }
+      continue;
+    }
+
+    // Assign rank; retry up to 5 times on UNIQUE(campaign_id, day, rank) conflict
+    let rank: number | null = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { rows } = await pool.query<{ rank: number }>(
+        `INSERT INTO daily_first_n (user_id, campaign_id, day, rank)
+         SELECT $1, $2, CURRENT_DATE, COALESCE(MAX(rank), 0) + 1
+         FROM daily_first_n WHERE campaign_id = $2 AND day = CURRENT_DATE
+         ON CONFLICT (campaign_id, day, rank) DO NOTHING
+         RETURNING rank`,
+        [userId, campaign.id],
+      );
+      if (rows[0]) { rank = rows[0].rank; break; }
+    }
+
+    if (rank !== null && rank <= campaign.daily_quota) {
+      try { await claimCampaign(campaign.id, userId, userLevel); } catch {}
+    }
+  }
 }
