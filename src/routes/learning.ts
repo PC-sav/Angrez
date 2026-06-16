@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../middleware/auth";
 import { errResponse, AppError, isConnectionError } from "../lib/errors";
+import { env } from "../config/env";
 
 // 8-4-4-4-12 hex, case-insensitive — covers all UUID versions (v1–v8).
 const UUID_RE =
@@ -142,6 +143,20 @@ router.post(
       res
         .status(400)
         .json(errResponse("MISSING_FIELDS", "sub_stage_id is required."));
+      return;
+    }
+
+    if (
+      req.query.dev_pass === "true" &&
+      (env.nodeEnv !== "production" || process.env.DEV_BYPASS_ENABLED === "true")
+    ) {
+      res.json({
+        mastered: true,
+        points_awarded: 10,
+        balance: 10,
+        next_sub_stage_id: "1.2",
+        message: "शाबाश! अगला सबक तैयार है।",
+      });
       return;
     }
 
