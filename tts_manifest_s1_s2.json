@@ -1,0 +1,750 @@
+{
+  "count": 149,
+  "files": [
+    {
+      "path": "audio/en/a_bit_slow_but_okay.mp3",
+      "lang": "en",
+      "text": "A bit slow, but okay."
+    },
+    {
+      "path": "audio/en/a_hundred_rupees.mp3",
+      "lang": "en",
+      "text": "A hundred rupees."
+    },
+    {
+      "path": "audio/en/add_some_coriander_please.mp3",
+      "lang": "en",
+      "text": "Add some coriander, please."
+    },
+    {
+      "path": "audio/en/all_good.mp3",
+      "lang": "en",
+      "text": "All good."
+    },
+    {
+      "path": "audio/en/all_good_you.mp3",
+      "lang": "en",
+      "text": "All good, you?"
+    },
+    {
+      "path": "audio/en/anything_else.mp3",
+      "lang": "en",
+      "text": "Anything else?"
+    },
+    {
+      "path": "audio/en/anything_to_drink.mp3",
+      "lang": "en",
+      "text": "Anything to drink?"
+    },
+    {
+      "path": "audio/en/anytime.mp3",
+      "lang": "en",
+      "text": "Anytime."
+    },
+    {
+      "path": "audio/en/black.mp3",
+      "lang": "en",
+      "text": "Black"
+    },
+    {
+      "path": "audio/en/blue.mp3",
+      "lang": "en",
+      "text": "Blue"
+    },
+    {
+      "path": "audio/en/bye.mp3",
+      "lang": "en",
+      "text": "Bye!"
+    },
+    {
+      "path": "audio/en/bye_see_you.mp3",
+      "lang": "en",
+      "text": "Bye, see you!"
+    },
+    {
+      "path": "audio/en/can_i_get_one.mp3",
+      "lang": "en",
+      "text": "Can I get one?"
+    },
+    {
+      "path": "audio/en/can_i_speak_to_riya.mp3",
+      "lang": "en",
+      "text": "Can I speak to Riya?"
+    },
+    {
+      "path": "audio/en/can_you_help_me.mp3",
+      "lang": "en",
+      "text": "Can you help me?"
+    },
+    {
+      "path": "audio/en/can_you_make_it_forty.mp3",
+      "lang": "en",
+      "text": "Can you make it forty?"
+    },
+    {
+      "path": "audio/en/can_you_pack_it.mp3",
+      "lang": "en",
+      "text": "Can you pack it?"
+    },
+    {
+      "path": "audio/en/do_you_have_soap.mp3",
+      "lang": "en",
+      "text": "Do you have soap?"
+    },
+    {
+      "path": "audio/en/done_forty_five_with_coriander.mp3",
+      "lang": "en",
+      "text": "Done — forty-five with coriander."
+    },
+    {
+      "path": "audio/en/done_seventy_with_two_extra.mp3",
+      "lang": "en",
+      "text": "Done — seventy, with two extra."
+    },
+    {
+      "path": "audio/en/dont_worry_itll_be_fine.mp3",
+      "lang": "en",
+      "text": "Don't worry, it'll be fine."
+    },
+    {
+      "path": "audio/en/eight.mp3",
+      "lang": "en",
+      "text": "Eight"
+    },
+    {
+      "path": "audio/en/eighty_rupees_a_kilo.mp3",
+      "lang": "en",
+      "text": "Eighty rupees a kilo."
+    },
+    {
+      "path": "audio/en/fifty_rupees_a_kilo.mp3",
+      "lang": "en",
+      "text": "Fifty rupees a kilo."
+    },
+    {
+      "path": "audio/en/fine_thanks_and_you.mp3",
+      "lang": "en",
+      "text": "Fine, thanks. And you?"
+    },
+    {
+      "path": "audio/en/five.mp3",
+      "lang": "en",
+      "text": "Five"
+    },
+    {
+      "path": "audio/en/four.mp3",
+      "lang": "en",
+      "text": "Four"
+    },
+    {
+      "path": "audio/en/fresh_mangoes_what_would_you_like.mp3",
+      "lang": "en",
+      "text": "Fresh mangoes! What would you like?"
+    },
+    {
+      "path": "audio/en/going_well.mp3",
+      "lang": "en",
+      "text": "Going well."
+    },
+    {
+      "path": "audio/en/great_talking_see_you_later.mp3",
+      "lang": "en",
+      "text": "Great talking to you. See you later!"
+    },
+    {
+      "path": "audio/en/green.mp3",
+      "lang": "en",
+      "text": "Green"
+    },
+    {
+      "path": "audio/en/hello.mp3",
+      "lang": "en",
+      "text": "Hello"
+    },
+    {
+      "path": "audio/en/hello_how_are_you.mp3",
+      "lang": "en",
+      "text": "Hello! How are you?"
+    },
+    {
+      "path": "audio/en/hello_how_can_i_help.mp3",
+      "lang": "en",
+      "text": "Hello, how can I help?"
+    },
+    {
+      "path": "audio/en/hello_whos_this.mp3",
+      "lang": "en",
+      "text": "Hello, who's this?"
+    },
+    {
+      "path": "audio/en/hey_whats_up.mp3",
+      "lang": "en",
+      "text": "Hey! What's up?"
+    },
+    {
+      "path": "audio/en/hi_whats_your_name.mp3",
+      "lang": "en",
+      "text": "Hi! What's your name?"
+    },
+    {
+      "path": "audio/en/hold_on_please.mp3",
+      "lang": "en",
+      "text": "Hold on, please."
+    },
+    {
+      "path": "audio/en/honestly_a_bit_boring.mp3",
+      "lang": "en",
+      "text": "Honestly, a bit boring."
+    },
+    {
+      "path": "audio/en/honestly_not_worth_it.mp3",
+      "lang": "en",
+      "text": "Honestly, not worth it."
+    },
+    {
+      "path": "audio/en/how_are_you.mp3",
+      "lang": "en",
+      "text": "How are you?"
+    },
+    {
+      "path": "audio/en/how_much_is_this.mp3",
+      "lang": "en",
+      "text": "How much is this?"
+    },
+    {
+      "path": "audio/en/how_much_to_the_station.mp3",
+      "lang": "en",
+      "text": "How much to the station?"
+    },
+    {
+      "path": "audio/en/how_was_the_movie.mp3",
+      "lang": "en",
+      "text": "How was the movie?"
+    },
+    {
+      "path": "audio/en/how_was_your_day.mp3",
+      "lang": "en",
+      "text": "How was your day?"
+    },
+    {
+      "path": "audio/en/hows_it_going.mp3",
+      "lang": "en",
+      "text": "How's it going?"
+    },
+    {
+      "path": "audio/en/hows_the_new_course.mp3",
+      "lang": "en",
+      "text": "How's the new course?"
+    },
+    {
+      "path": "audio/en/hows_the_new_phone.mp3",
+      "lang": "en",
+      "text": "How's the new phone?"
+    },
+    {
+      "path": "audio/en/im_good_thank_you.mp3",
+      "lang": "en",
+      "text": "I'm good, thank you."
+    },
+    {
+      "path": "audio/en/im_looking_for_sugar.mp3",
+      "lang": "en",
+      "text": "I'm looking for sugar."
+    },
+    {
+      "path": "audio/en/im_name.mp3",
+      "lang": "en",
+      "text": "I'm Riya."
+    },
+    {
+      "path": "audio/en/im_name_nice_to_meet_you.mp3",
+      "lang": "en",
+      "text": "I'm Riya, nice to meet you."
+    },
+    {
+      "path": "audio/en/is_it_fresh.mp3",
+      "lang": "en",
+      "text": "Is it fresh?"
+    },
+    {
+      "path": "audio/en/it_was_good_thanks.mp3",
+      "lang": "en",
+      "text": "It was good, thanks."
+    },
+    {
+      "path": "audio/en/it_was_great_i_loved_it.mp3",
+      "lang": "en",
+      "text": "It was great, I loved it."
+    },
+    {
+      "path": "audio/en/its_okay.mp3",
+      "lang": "en",
+      "text": "It's okay."
+    },
+    {
+      "path": "audio/en/ive_had_a_rough_day.mp3",
+      "lang": "en",
+      "text": "I've had a rough day."
+    },
+    {
+      "path": "audio/en/just_a_lot_on_my_mind.mp3",
+      "lang": "en",
+      "text": "Just a lot on my mind."
+    },
+    {
+      "path": "audio/en/just_the_usual.mp3",
+      "lang": "en",
+      "text": "Just the usual."
+    },
+    {
+      "path": "audio/en/just_water_please.mp3",
+      "lang": "en",
+      "text": "Just water, please."
+    },
+    {
+      "path": "audio/en/make_it_less_spicy_please.mp3",
+      "lang": "en",
+      "text": "Make it less spicy, please."
+    },
+    {
+      "path": "audio/en/market_please.mp3",
+      "lang": "en",
+      "text": "Market, please."
+    },
+    {
+      "path": "audio/en/maybe_later.mp3",
+      "lang": "en",
+      "text": "Maybe later."
+    },
+    {
+      "path": "audio/en/my_name_is.mp3",
+      "lang": "en",
+      "text": "My name is Riya."
+    },
+    {
+      "path": "audio/en/nice_to_meet_you.mp3",
+      "lang": "en",
+      "text": "Nice to meet you."
+    },
+    {
+      "path": "audio/en/nice_to_meet_you_too.mp3",
+      "lang": "en",
+      "text": "Nice to meet you too."
+    },
+    {
+      "path": "audio/en/nice_whats_your_name.mp3",
+      "lang": "en",
+      "text": "Nice! What's your name?"
+    },
+    {
+      "path": "audio/en/nine.mp3",
+      "lang": "en",
+      "text": "Nine"
+    },
+    {
+      "path": "audio/en/no_problem.mp3",
+      "lang": "en",
+      "text": "No problem."
+    },
+    {
+      "path": "audio/en/no_thank_you.mp3",
+      "lang": "en",
+      "text": "No, thank you."
+    },
+    {
+      "path": "audio/en/no_thanks.mp3",
+      "lang": "en",
+      "text": "No, thanks."
+    },
+    {
+      "path": "audio/en/no_thats_all.mp3",
+      "lang": "en",
+      "text": "No, that's all."
+    },
+    {
+      "path": "audio/en/no_worries.mp3",
+      "lang": "en",
+      "text": "No worries."
+    },
+    {
+      "path": "audio/en/not_bad_worth_a_watch.mp3",
+      "lang": "en",
+      "text": "Not bad, worth a watch."
+    },
+    {
+      "path": "audio/en/nothing_much.mp3",
+      "lang": "en",
+      "text": "Nothing much."
+    },
+    {
+      "path": "audio/en/nothing_much_just_tired.mp3",
+      "lang": "en",
+      "text": "Nothing much, just tired."
+    },
+    {
+      "path": "audio/en/of_course.mp3",
+      "lang": "en",
+      "text": "Of course."
+    },
+    {
+      "path": "audio/en/okay_forty_five_thats_my_best.mp3",
+      "lang": "en",
+      "text": "Okay, forty-five. That's my best."
+    },
+    {
+      "path": "audio/en/okay_see_you_later.mp3",
+      "lang": "en",
+      "text": "Okay, see you later!"
+    },
+    {
+      "path": "audio/en/okay_seventy_final_price.mp3",
+      "lang": "en",
+      "text": "Okay, seventy. Final price."
+    },
+    {
+      "path": "audio/en/one.mp3",
+      "lang": "en",
+      "text": "One"
+    },
+    {
+      "path": "audio/en/one_coffee_please.mp3",
+      "lang": "en",
+      "text": "One coffee, please."
+    },
+    {
+      "path": "audio/en/one_masala_dosa_anything_else.mp3",
+      "lang": "en",
+      "text": "One masala dosa, anything else?"
+    },
+    {
+      "path": "audio/en/one_tea_please.mp3",
+      "lang": "en",
+      "text": "One tea, please."
+    },
+    {
+      "path": "audio/en/one_to_five.mp3",
+      "lang": "en",
+      "text": "One two three four five"
+    },
+    {
+      "path": "audio/en/phone_ring.mp3",
+      "lang": "en",
+      "text": "(ring ring)"
+    },
+    {
+      "path": "audio/en/pretty_good.mp3",
+      "lang": "en",
+      "text": "Pretty good."
+    },
+    {
+      "path": "audio/en/pretty_tiring_actually.mp3",
+      "lang": "en",
+      "text": "Pretty tiring, actually."
+    },
+    {
+      "path": "audio/en/red.mp3",
+      "lang": "en",
+      "text": "Red"
+    },
+    {
+      "path": "audio/en/same_as_usual.mp3",
+      "lang": "en",
+      "text": "Same as usual."
+    },
+    {
+      "path": "audio/en/same_as_usual_you.mp3",
+      "lang": "en",
+      "text": "Same as usual. You?"
+    },
+    {
+      "path": "audio/en/same_here.mp3",
+      "lang": "en",
+      "text": "Same here."
+    },
+    {
+      "path": "audio/en/see_you.mp3",
+      "lang": "en",
+      "text": "See you!"
+    },
+    {
+      "path": "audio/en/see_you_later.mp3",
+      "lang": "en",
+      "text": "See you later!"
+    },
+    {
+      "path": "audio/en/seven.mp3",
+      "lang": "en",
+      "text": "Seven"
+    },
+    {
+      "path": "audio/en/shes_not_here_right_now.mp3",
+      "lang": "en",
+      "text": "She's not here right now."
+    },
+    {
+      "path": "audio/en/six.mp3",
+      "lang": "en",
+      "text": "Six"
+    },
+    {
+      "path": "audio/en/sorry.mp3",
+      "lang": "en",
+      "text": "Sorry!"
+    },
+    {
+      "path": "audio/en/sorry_wrong_number.mp3",
+      "lang": "en",
+      "text": "Sorry, wrong number."
+    },
+    {
+      "path": "audio/en/speaking.mp3",
+      "lang": "en",
+      "text": "Speaking."
+    },
+    {
+      "path": "audio/en/stop_here_please.mp3",
+      "lang": "en",
+      "text": "Stop here, please."
+    },
+    {
+      "path": "audio/en/sure.mp3",
+      "lang": "en",
+      "text": "Sure."
+    },
+    {
+      "path": "audio/en/take_care.mp3",
+      "lang": "en",
+      "text": "Take care!"
+    },
+    {
+      "path": "audio/en/take_me_to_the_hospital.mp3",
+      "lang": "en",
+      "text": "Take me to the hospital."
+    },
+    {
+      "path": "audio/en/ten.mp3",
+      "lang": "en",
+      "text": "Ten"
+    },
+    {
+      "path": "audio/en/thank_you.mp3",
+      "lang": "en",
+      "text": "Thank you!"
+    },
+    {
+      "path": "audio/en/thank_you_so_much.mp3",
+      "lang": "en",
+      "text": "Thank you so much!"
+    },
+    {
+      "path": "audio/en/thats_a_bit_too_much.mp3",
+      "lang": "en",
+      "text": "That's a bit too much."
+    },
+    {
+      "path": "audio/en/thats_alright.mp3",
+      "lang": "en",
+      "text": "That's alright."
+    },
+    {
+      "path": "audio/en/thats_it_thanks.mp3",
+      "lang": "en",
+      "text": "That's it, thanks."
+    },
+    {
+      "path": "audio/en/thats_too_much_make_it_less.mp3",
+      "lang": "en",
+      "text": "That's too much — make it less."
+    },
+    {
+      "path": "audio/en/three.mp3",
+      "lang": "en",
+      "text": "Three"
+    },
+    {
+      "path": "audio/en/throw_in_a_few_chillies.mp3",
+      "lang": "en",
+      "text": "Throw in a few chillies?"
+    },
+    {
+      "path": "audio/en/to_the_station_please.mp3",
+      "lang": "en",
+      "text": "To the station, please."
+    },
+    {
+      "path": "audio/en/two.mp3",
+      "lang": "en",
+      "text": "Two"
+    },
+    {
+      "path": "audio/en/very_useful_im_learning_a_lot.mp3",
+      "lang": "en",
+      "text": "Very useful, I'm learning a lot."
+    },
+    {
+      "path": "audio/en/what_would_you_like.mp3",
+      "lang": "en",
+      "text": "What would you like?"
+    },
+    {
+      "path": "audio/en/whats_stressing_you.mp3",
+      "lang": "en",
+      "text": "What's stressing you?"
+    },
+    {
+      "path": "audio/en/whats_up.mp3",
+      "lang": "en",
+      "text": "What's up?"
+    },
+    {
+      "path": "audio/en/whats_your_name.mp3",
+      "lang": "en",
+      "text": "What's your name?"
+    },
+    {
+      "path": "audio/en/where_to.mp3",
+      "lang": "en",
+      "text": "Where to?"
+    },
+    {
+      "path": "audio/en/white.mp3",
+      "lang": "en",
+      "text": "White"
+    },
+    {
+      "path": "audio/en/work_has_been_hectic.mp3",
+      "lang": "en",
+      "text": "Work has been hectic."
+    },
+    {
+      "path": "audio/en/would_you_like_tea.mp3",
+      "lang": "en",
+      "text": "Would you like some tea?"
+    },
+    {
+      "path": "audio/en/yellow.mp3",
+      "lang": "en",
+      "text": "Yellow"
+    },
+    {
+      "path": "audio/en/yes_also_one_more.mp3",
+      "lang": "en",
+      "text": "Yes, also one more."
+    },
+    {
+      "path": "audio/en/yes_definitely.mp3",
+      "lang": "en",
+      "text": "Yes, definitely."
+    },
+    {
+      "path": "audio/en/yes_please.mp3",
+      "lang": "en",
+      "text": "Yes, please."
+    },
+    {
+      "path": "audio/en/yes_sir_madam.mp3",
+      "lang": "en",
+      "text": "Yes, sir/madam?"
+    },
+    {
+      "path": "audio/en/yes_what_would_you_like.mp3",
+      "lang": "en",
+      "text": "Yes, what would you like?"
+    },
+    {
+      "path": "audio/en/you_seem_tired_whats_stressing_you.mp3",
+      "lang": "en",
+      "text": "You seem tired. What's stressing you?"
+    },
+    {
+      "path": "audio/en/you_too.mp3",
+      "lang": "en",
+      "text": "You too."
+    },
+    {
+      "path": "audio/en/youre_welcome.mp3",
+      "lang": "en",
+      "text": "You're welcome."
+    },
+    {
+      "path": "audio/hi/s1_1_warmup.mp3",
+      "lang": "hi",
+      "text": "जब कोई आपसे पूछे 'कैसे हो?' — आप क्या कहते हैं? अब वही अंग्रेज़ी में, आसानी से।"
+    },
+    {
+      "path": "audio/hi/s1_2_warmup.mp3",
+      "lang": "hi",
+      "text": "कोई नया इंसान पूछे 'आपका नाम क्या है?' — अब अंग्रेज़ी में बताना सीखते हैं।"
+    },
+    {
+      "path": "audio/hi/s1_3_warmup.mp3",
+      "lang": "hi",
+      "text": "कोई आपको 'Thank you' कहे — आप क्या कहेंगे? आज यही सीखते हैं।"
+    },
+    {
+      "path": "audio/hi/s1_4_warmup.mp3",
+      "lang": "hi",
+      "text": "कोई चाय पूछे — 'हाँ' या 'ना' विनम्रता से कैसे कहें? चलिए सीखते हैं।"
+    },
+    {
+      "path": "audio/hi/s1_5_warmup.mp3",
+      "lang": "hi",
+      "text": "दोस्त मिलने पर पूछता है 'और, क्या चल रहा है?' — अंग्रेज़ी में इसका सहज जवाब सीखते हैं।"
+    },
+    {
+      "path": "audio/hi/s1_6_warmup.mp3",
+      "lang": "hi",
+      "text": "जाते समय सिर्फ़ 'Bye' नहीं — और भी सहज तरीके हैं। चलिए सीखते हैं।"
+    },
+    {
+      "path": "audio/hi/s1_7_warmup.mp3",
+      "lang": "hi",
+      "text": "गिनती और रंग — रोज़ काम आते हैं। बोलकर सीखते हैं।"
+    },
+    {
+      "path": "audio/hi/s1_8_warmup.mp3",
+      "lang": "hi",
+      "text": "अब तक आपने बहुत कुछ सीखा! आज सब जोड़कर एक पूरी बातचीत करते हैं — जैसे असल ज़िंदगी में।"
+    },
+    {
+      "path": "audio/hi/s2_1_warmup.mp3",
+      "lang": "hi",
+      "text": "बाज़ार में सिर्फ़ दाम पूछना काफ़ी नहीं — मोल-भाव, थोड़ा धनिया मुफ़्त, फिर सौदा। आज पूरी बातचीत सीखते हैं!"
+    },
+    {
+      "path": "audio/hi/s2_2_warmup.mp3",
+      "lang": "hi",
+      "text": "दुकान पर सामान माँगना — 'क्या है आपके पास?', 'यह दीजिए', 'बस इतना ही'। आज यही।"
+    },
+    {
+      "path": "audio/hi/s2_3_warmup.mp3",
+      "lang": "hi",
+      "text": "ऑटो में — 'कहाँ जाना है?', किराया पूछना और थोड़ा कम करवाना, 'यहाँ रोकिए'। चलिए सीखते हैं।"
+    },
+    {
+      "path": "audio/hi/s2_4_warmup.mp3",
+      "lang": "hi",
+      "text": "होटल में ऑर्डर देना — और साथ में 'कम तीखा', 'पैक कर दीजिए', बिल माँगना। आज यही।"
+    },
+    {
+      "path": "audio/hi/s2_5_warmup.mp3",
+      "lang": "hi",
+      "text": "फ़ोन पर अंग्रेज़ी — 'कौन बोल रहा है?', 'रुकिए', 'ग़लत नंबर'। आज यही।"
+    },
+    {
+      "path": "audio/hi/s2_6_warmup.mp3",
+      "lang": "hi",
+      "text": "घर पर, दोस्तों से — 'दिन कैसा रहा?', 'क्या परेशानी है?'। अब अपने मन की बात भी अंग्रेज़ी में कहना सीखते हैं।"
+    },
+    {
+      "path": "audio/hi/s2_7_warmup.mp3",
+      "lang": "hi",
+      "text": "कोई पूछे 'फ़िल्म कैसी थी?', 'कोर्स कैसा है?' — अपनी राय अंग्रेज़ी में देना सीखते हैं। कोई सही या ग़लत जवाब नहीं — जो दिल कहे, वही बोलिए।"
+    },
+    {
+      "path": "audio/hi/s2_8_warmup.mp3",
+      "lang": "hi",
+      "text": "आज एक पूरी बाज़ार की बातचीत — दाम पूछना, काउंटर देना, थोड़ा मुफ़्त लेना, सौदा पक्का करना। जैसे असल ज़िंदगी में!"
+    }
+  ]
+}
