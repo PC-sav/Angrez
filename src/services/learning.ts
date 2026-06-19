@@ -422,58 +422,12 @@ export async function completeSubStage(userId: string, subStageId: string) {
 
   let pointsAwarded = 0;
 
-  if (!alreadyAwarded) {
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
+  // Progress writes run on EVERY mastered completion (idempotent).
+  const progressClient = await pool.connect();
+  try {
+    await progressClient.query("BEGIN");
 
-      await client.query(
-        `INSERT INTO wallet_ledger (user_id, delta_points, reason, idempotency_key)
-         VALUES ($1, $2, 'sub_stage_complete', $3)
-         ON CONFLICT (idempotency_key) DO NOTHING`,
-        [userId, pack.points.sub_stage_complete, idemKeyComplete],
-      );
-      pointsAwarded += pack.points.sub_stage_complete;
-
-      if (isPerfect) {
-        await client.query(
-          `INSERT INTO wallet_ledger (user_id, delta_points, reason, idempotency_key)
-           VALUES ($1, $2, 'sub_stage_perfect_bonus', $3)
-           ON CONFLICT (idempotency_key) DO NOTHING`,
-          [userId, pack.points.sub_stage_perfect_bonus, idemKeyPerfect],
-        );
-        pointsAwarded += pack.points.sub_stage_perfect_bonus;
-      }
-
-      await client.query(
-        `INSERT INTO progress (user_id, sub_stage_id, status, mastery_score)
-         VALUES ($1, $2, 'complete', $3)
-         ON CONFLICT (user_id, sub_stage_id) DO UPDATE SET
-           status        = 'complete',
-           mastery_score = EXCLUDED.mastery_score,
-           updated_at    = now()`,
-        [userId, subStageId, mastery * 100],
-      );
-
-      if (nextSS) {
-        await client.query(
-          `INSERT INTO progress (user_id, sub_stage_id, status)
-           VALUES ($1, $2, 'not_started')
-           ON CONFLICT (user_id, sub_stage_id) DO NOTHING`,
-          [userId, nextSS.id],
-        );
-      }
-
-      await client.query("COMMIT");
-    } catch (err) {
-      await client.query("ROLLBACK");
-      throw err;
-    } finally {
-      client.release();
-    }
-  } else {
-    // Already awarded: just keep progress up to date
-    await pool.query(
+    await progressClient.query(
       `INSERT INTO progress (user_id, sub_stage_id, status, mastery_score)
        VALUES ($1, $2, 'complete', $3)
        ON CONFLICT (user_id, sub_stage_id) DO UPDATE SET
@@ -482,6 +436,55 @@ export async function completeSubStage(userId: string, subStageId: string) {
          updated_at    = now()`,
       [userId, subStageId, mastery * 100],
     );
+
+    if (nextSS) {
+      await progressClient.query(
+        `INSERT INTO progress (user_id, sub_stage_id, status)
+         VALUES ($1, $2, 'not_started')
+         ON CONFLICT (user_id, sub_stage_id) DO NOTHING`,
+        [userId, nextSS.id],
+      );
+    }
+
+    await progressClient.query("COMMIT");
+  } catch (err) {
+    await progressClient.query("ROLLBACK");
+    throw err;
+  } finally {
+    progressClient.release();
+  }
+
+  // Wallet writes run only on first completion (points must never be awarded twice).
+  if (!alreadyAwarded) {
+    const walletClient = await pool.connect();
+    try {
+      await walletClient.query("BEGIN");
+
+      await walletClient.query(
+        `INSERT INTO wallet_ledger (user_id, delta_points, reason, idempotency_key)
+         VALUES ($1, $2, 'sub_stage_complete', $3)
+         ON CONFLICT (idempotency_key) DO NOTHING`,
+        [userId, pack.points.sub_stage_complete, idemKeyComplete],
+      );
+      pointsAwarded += pack.points.sub_stage_complete;
+
+      if (isPerfect) {
+        await walletClient.query(
+          `INSERT INTO wallet_ledger (user_id, delta_points, reason, idempotency_key)
+           VALUES ($1, $2, 'sub_stage_perfect_bonus', $3)
+           ON CONFLICT (idempotency_key) DO NOTHING`,
+          [userId, pack.points.sub_stage_perfect_bonus, idemKeyPerfect],
+        );
+        pointsAwarded += pack.points.sub_stage_perfect_bonus;
+      }
+
+      await walletClient.query("COMMIT");
+    } catch (err) {
+      await walletClient.query("ROLLBACK");
+      throw err;
+    } finally {
+      walletClient.release();
+    }
   }
 
   const result = {
