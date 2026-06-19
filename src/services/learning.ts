@@ -33,6 +33,7 @@ interface SubStageJson {
   title_en?: string;
   title_l1?: string;
   micro_skill_l1?: string;
+  warmup?: { audio?: string; [key: string]: unknown };
   teach?: unknown[];
   practice?: PuzzleJson[];
   mastery_check?: PuzzleJson[];
@@ -205,6 +206,7 @@ export async function getNextPlan(userId: string) {
     title_en: currentSS!.title_en,
     title_l1: currentSS!.title_l1,
     micro_skill_l1: currentSS!.micro_skill_l1,
+    warmup: currentSS!.warmup ?? null,
     teach: currentSS!.teach ?? [],
     practice: currentSS!.practice ?? [],
     status: prog?.status ?? "not_started",
