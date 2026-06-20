@@ -137,7 +137,7 @@
             "accept": ["nice to meet you too", "you too", "same here", "nice to meet you"], "open_ended": true,
             "hint_l1": "'You too' भी काफ़ी है।", "fallback": { "type": "text" }, "points": { "base": 10, "voice_bonus": 5 } },
           { "id": "1.2.p3", "type": "repetition_drill", "instruction_l1": "सुनिए और बोलिए", "audio": "audio/en/im_name_nice_to_meet_you.mp3", "target": "I'm Riya, nice to meet you.",
-            "accept": ["i'm * nice to meet you", "i am * nice to meet you"], "open_ended": true, "pace": "slow",
+            "accept_frames": ["i'm * nice to meet you", "i am * nice to meet you"], "open_ended": true, "pace": "slow",
             "hint_l1": "नाम की जगह अपना नाम कहिए।", "fallback": { "type": "text" }, "points": { "base": 5, "voice_bonus": 5 } },
           { "id": "1.2.p4", "type": "role_play_turn", "instruction_l1": "नई मुलाक़ात — जवाब दीजिए", "scenario_l1": "मित्थू: 'Hi! What's your name?'", "ai_line_en": "Hi! What's your name?", "ai_line_audio": "audio/en/hi_whats_your_name.mp3",
             "accept_frames": ["i'm *", "my name is *"], "open_ended": true, "name_field": true, "exchanges": 1,
