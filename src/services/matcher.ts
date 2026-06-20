@@ -84,20 +84,31 @@ function matchesFrame(transcript: string, frames: string[]): boolean {
     }
 
     const normPrefix = normalise(frame.slice(0, starIdx));
+    const normSuffix = normalise(frame.slice(starIdx + 1));
 
-    if (!normPrefix) {
+    if (!normPrefix && !normSuffix) {
       // Frame is just "*" — anything non-empty counts
       return normT.length > 0;
     }
 
-    // Transcript must be: "<prefix> <rest>" where rest is at least one token.
-    // Use startsWith(prefix + " ") to avoid false-prefixes ("im" matching "image …").
-    if (normT === normPrefix) return false; // prefix only, nothing after it
+    // Determine the slice of normT that the wildcard must cover.
+    let start = 0;
+    let end = normT.length;
 
-    if (!normT.startsWith(normPrefix + " ")) return false;
+    if (normPrefix) {
+      // Prefix must be followed by a space to avoid false-prefix matches ("im" → "image …")
+      if (!normT.startsWith(normPrefix + " ")) return false;
+      start = normPrefix.length + 1;
+    }
 
-    const remainder = normT.slice(normPrefix.length + 1).trim(); // +1 for the space
-    return remainder.length > 0;
+    if (normSuffix) {
+      // Suffix must be preceded by a space
+      if (!normT.endsWith(" " + normSuffix)) return false;
+      end = normT.length - normSuffix.length - 1;
+    }
+
+    // The wildcard slot must contain at least one non-whitespace character
+    return start < end && normT.slice(start, end).trim().length > 0;
   });
 }
 
