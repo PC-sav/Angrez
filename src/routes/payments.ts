@@ -105,20 +105,36 @@ router.post("/webhook", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  // 3. Extract fields from Cashfree v2023-08-01 payload shape:
-  //    event.data.order.order_id, event.data.payment.payment_status,
-  //    event.data.payment.payment_amount
-  const data     = event.data as Record<string, unknown> | undefined;
-  const order    = data?.order  as Record<string, unknown> | undefined;
-  const payment  = data?.payment as Record<string, unknown> | undefined;
+  // 3. Diagnostic — log full body and event-type header on every verified webhook.
+  //    Permanent debug log: lets us see exact payload shape from Railway logs.
+  console.log("[webhook] RAW body:", JSON.stringify(event));
+  console.log("[webhook] type header:", req.headers["x-webhook-event"] ?? "(none)");
 
-  const orderId       = order?.order_id       as string | undefined;
+  // 4. Extract fields with a fallback chain that covers the 2023-08-01 nested
+  //    shape, older nesting, and flat (test-ping) shapes.
+  const data      = event.data  as Record<string, unknown> | undefined;
+  const orderData = data?.order  as Record<string, unknown> | undefined;
+  const payment   = data?.payment as Record<string, unknown> | undefined;
+
+  const orderId: string | null =
+    (orderData?.order_id as string | undefined) ??           // 2023-08-01 success/failed
+    ((event.order as Record<string, unknown>)?.order_id as string | undefined) ?? // older nesting
+    (event.order_id as string | undefined) ??                // flat
+    null;
+
   const paymentStatus = payment?.payment_status as string | undefined;
-  const paidAmount    = payment?.payment_amount as number | undefined;
 
-  // Unknown event shape — ack without action so Cashfree stops retrying.
+  // payment_amount is preferred; fall back to order_amount for older shapes.
+  const paidAmount: number | undefined =
+    (payment?.payment_amount as number | undefined) ??
+    (orderData?.order_amount as number | undefined);
+
+  // Test pings and unrecognised event shapes have no order_id — ack without action.
   if (!orderId) {
-    console.warn("[webhook] received event with no order_id", { type: event.type });
+    console.warn(
+      "[webhook] no order_id found. top-level keys:", Object.keys(event),
+      "| data keys:", data ? Object.keys(data) : "(no data)",
+    );
     res.status(200).json({ received: true });
     return;
   }
