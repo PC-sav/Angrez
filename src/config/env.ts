@@ -37,4 +37,10 @@ export const env = {
   otpRateLimitCount: parseInt(optional("OTP_RATE_LIMIT_COUNT", "3"), 10),
   otpRateLimitWindowMinutes: parseInt(optional("OTP_RATE_LIMIT_WINDOW_MINUTES", "15"), 10),
   otpResendCooldownSeconds: parseInt(optional("OTP_RESEND_COOLDOWN_SECONDS", "30"), 10),
+
+  // Cashfree Payments — all four are required at startup (Railway Variables)
+  cashfreeClientId: required("CASHFREE_CLIENT_ID"),
+  cashfreeClientSecret: required("CASHFREE_CLIENT_SECRET"),
+  cashfreeWebhookSecret: required("CASHFREE_WEBHOOK_SECRET"),
+  cashfreeEnv: optional("CASHFREE_ENV", "sandbox") as "sandbox" | "prod",
 } as const;

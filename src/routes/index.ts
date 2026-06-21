@@ -5,6 +5,8 @@ import contentRouter from "./content";
 import learningRouter from "./learning";
 import walletRouter from "./wallet";
 import campaignsRouter from "./campaigns";
+import paymentsRouter from "./payments";
+import subscriptionRouter from "./subscription";
 
 const router = Router();
 
@@ -24,6 +26,8 @@ router.use("/auth", authRouter);
 router.use("/content", contentRouter);
 router.use("/wallet", walletRouter);
 router.use("/campaigns", campaignsRouter);
+router.use("/payments", paymentsRouter);
+router.use("/subscription", subscriptionRouter);
 router.use("/", learningRouter);
 
 export default router;
