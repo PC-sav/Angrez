@@ -25,6 +25,46 @@ export function getPriceForPlan(plan: Plan): number {
   return PLAN_CONFIG[plan].amount;
 }
 
+// ── Campaign price resolution (9C) ───────────────────────────────────────────
+// resolvePrice is the single price authority for create-order.
+// getPriceForPlan remains for places that only need the catalogue default
+// (original_amount display, amount cross-checks).
+
+export interface ResolvedPrice {
+  amount: number;
+  campaign_id: string | null;
+  campaign_name: string | null;
+}
+
+export async function resolvePrice(plan: Plan): Promise<ResolvedPrice> {
+  // Lowest-price active early_bird_price campaign in window with quota remaining.
+  // Quota is counted on PAID orders only — CREATED orders never consume quota.
+  const { rows } = await pool.query<{ id: string; name: string; price_paise: number }>(
+    `SELECT c.id, c.name, c.price_paise
+     FROM campaigns c
+     WHERE c.type = 'early_bird_price'
+       AND c.active = true
+       AND c.plan = $1
+       AND now() BETWEEN c.starts_at AND c.ends_at
+       AND (c.quota IS NULL OR
+            (SELECT COUNT(*) FROM orders o
+             WHERE o.campaign_id = c.id AND o.status = 'PAID') < c.quota)
+     ORDER BY c.price_paise ASC
+     LIMIT 1`,
+    [plan],
+  );
+
+  if (rows[0]) {
+    const amount = rows[0].price_paise / 100;
+    // Sanity guard: must be a plausible positive price under ₹10,000
+    if (amount > 0 && amount < 10000) {
+      return { amount, campaign_id: rows[0].id, campaign_name: rows[0].name };
+    }
+  }
+
+  return { amount: getPriceForPlan(plan), campaign_id: null, campaign_name: null };
+}
+
 // ── Cashfree HTTP helpers ─────────────────────────────────────────────────────
 
 function cashfreeBaseUrl(): string {

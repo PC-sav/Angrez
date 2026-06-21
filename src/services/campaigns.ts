@@ -16,7 +16,18 @@ export interface Campaign {
   award_points: number;
   price_paise: number | null;
   eligibility_json: string | null;
+  plan: string | null;
   created_at: Date;
+}
+
+export interface PricingCampaignRow {
+  id: string;
+  name: string;
+  plan: string;
+  price_paise: number;
+  quota: number | null;
+  ends_at: Date;
+  paid_count: number;
 }
 
 export interface CampaignGrant {
@@ -38,6 +49,7 @@ export const VALID_CAMPAIGN_TYPES = new Set([
   "first_n",
   "daily_first_n",
   "early_bird",
+  "early_bird_price",  // 9C: price-override campaigns
 ]);
 
 // ── 1. Active campaigns ───────────────────────────────────────────────────────
@@ -45,10 +57,33 @@ export const VALID_CAMPAIGN_TYPES = new Set([
 export async function getActiveCampaigns(): Promise<Campaign[]> {
   const { rows } = await pool.query<Campaign>(
     `SELECT id, name, type, award_points, price_paise, quota, granted_count,
-            ends_at, active, starts_at, created_at, daily_quota, eligibility_json
+            ends_at, active, starts_at, created_at, daily_quota, eligibility_json, plan
      FROM campaigns
      WHERE active = true AND starts_at <= now() AND ends_at >= now()
      ORDER BY created_at DESC`,
+  );
+  return rows;
+}
+
+// ── 1b. Active pricing campaigns (9C) ────────────────────────────────────────
+// Returns early_bird_price campaigns that are in-window and have quota remaining.
+// quota_remaining is computed from PAID orders only (CREATED orders never consume quota).
+
+export async function getActivePricingCampaigns(): Promise<PricingCampaignRow[]> {
+  const { rows } = await pool.query<PricingCampaignRow>(
+    `SELECT
+       c.id, c.name, c.plan, c.price_paise, c.quota, c.ends_at,
+       (SELECT COUNT(*)::INT FROM orders o
+        WHERE o.campaign_id = c.id AND o.status = 'PAID') AS paid_count
+     FROM campaigns c
+     WHERE c.type = 'early_bird_price'
+       AND c.active = true
+       AND c.plan IS NOT NULL
+       AND now() BETWEEN c.starts_at AND c.ends_at
+       AND (c.quota IS NULL OR
+            (SELECT COUNT(*) FROM orders o
+             WHERE o.campaign_id = c.id AND o.status = 'PAID') < c.quota)
+     ORDER BY c.price_paise ASC`,
   );
   return rows;
 }
@@ -201,6 +236,7 @@ export interface CreateCampaignBody {
   price_paise?: number | null;
   eligibility_json?: string | null;
   daily_quota?: number | null;
+  plan?: string | null;
 }
 
 export async function createCampaign(body: CreateCampaignBody): Promise<Campaign> {
@@ -211,16 +247,17 @@ export async function createCampaign(body: CreateCampaignBody): Promise<Campaign
     price_paise = null,
     eligibility_json = null,
     daily_quota = null,
+    plan = null,
   } = body;
 
   const { rows } = await pool.query<Campaign>(
     `INSERT INTO campaigns
        (id, name, type, starts_at, ends_at, quota, award_points,
-        price_paise, eligibility_json, daily_quota)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        price_paise, eligibility_json, daily_quota, plan)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING *`,
     [id, name, type, starts_at, ends_at, quota, award_points,
-     price_paise, eligibility_json, daily_quota],
+     price_paise, eligibility_json, daily_quota, plan],
   );
   return rows[0];
 }
@@ -250,6 +287,17 @@ export async function patchCampaign(
   const active  = body.active   !== undefined ? body.active   : cur.active;
   const quota   = body.quota    !== undefined ? body.quota    : cur.quota;
   const ends_at = body.ends_at  !== undefined ? body.ends_at  : cur.ends_at;
+
+  // Toggle: activating an early_bird_price campaign deactivates all other
+  // early_bird_price campaigns for the same plan.  Safety net (spec §9C.3):
+  // if two somehow remain active, resolvePrice picks the lowest price.
+  if (active === true && cur.type === "early_bird_price" && cur.plan) {
+    await pool.query(
+      `UPDATE campaigns SET active = false
+       WHERE type = 'early_bird_price' AND plan = $1 AND id != $2`,
+      [cur.plan, campaignId],
+    );
+  }
 
   const { rows } = await pool.query<Campaign>(
     `UPDATE campaigns SET active = $1, quota = $2, ends_at = $3 WHERE id = $4 RETURNING *`,

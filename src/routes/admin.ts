@@ -51,7 +51,7 @@ router.get("/campaigns", requireAdmin, async (_req: Request, res: Response): Pro
 // POST /admin/campaigns
 router.post("/campaigns", requireAdmin, async (req: Request, res: Response): Promise<void> => {
   const { id, name, type, starts_at, ends_at, quota, award_points,
-          price_paise, eligibility_json, daily_quota } = req.body;
+          price_paise, eligibility_json, daily_quota, plan } = req.body;
 
   if (!id || !name || !type || !starts_at || !ends_at) {
     res.status(400).json(errResponse("MISSING_FIELDS",
@@ -63,11 +63,24 @@ router.post("/campaigns", requireAdmin, async (req: Request, res: Response): Pro
       `type must be one of: ${[...VALID_CAMPAIGN_TYPES].join(", ")}.`));
     return;
   }
+  // early_bird_price requires a plan and a positive price_paise
+  if (type === "early_bird_price") {
+    if (!plan || !["trial", "month", "year"].includes(plan as string)) {
+      res.status(400).json(errResponse("MISSING_FIELDS",
+        "early_bird_price campaigns require plan: trial | month | year."));
+      return;
+    }
+    if (!price_paise || (price_paise as number) <= 0) {
+      res.status(400).json(errResponse("MISSING_FIELDS",
+        "early_bird_price campaigns require a positive price_paise."));
+      return;
+    }
+  }
 
   try {
     const campaign = await createCampaign({
       id, name, type, starts_at, ends_at, quota, award_points,
-      price_paise, eligibility_json, daily_quota,
+      price_paise, eligibility_json, daily_quota, plan,
     });
     res.status(201).json(campaign);
   } catch (err) {
@@ -78,11 +91,11 @@ router.post("/campaigns", requireAdmin, async (req: Request, res: Response): Pro
 // PATCH /admin/campaigns/:id
 router.patch("/campaigns/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
   const campaignId = req.params.id as string;
-  const { id: bodyId, type, ...rest } = req.body;
+  const { id: bodyId, type, plan, ...rest } = req.body;
 
-  if (bodyId !== undefined || type !== undefined) {
+  if (bodyId !== undefined || type !== undefined || plan !== undefined) {
     res.status(400).json(errResponse("IMMUTABLE_FIELDS",
-      "id and type cannot be changed after creation."));
+      "id, type and plan cannot be changed after creation."));
     return;
   }
 

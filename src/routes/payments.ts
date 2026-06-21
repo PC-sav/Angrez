@@ -7,6 +7,7 @@ import pool from "../lib/db";
 import {
   isValidPlan,
   getPriceForPlan,
+  resolvePrice,
   QUALIFYING_PLANS,
   createCashfreeOrder,
   verifyWebhookSignature,
@@ -43,15 +44,19 @@ router.post("/order", requireAuth, async (req: Request, res: Response): Promise<
     }
 
     const user = req.user!;
-    const amount = getPriceForPlan(plan as Plan);
+
+    // resolvePrice is the single price authority: checks active early_bird_price
+    // campaigns first, falls back to PLAN_CONFIG.  Amount is frozen at create-time.
+    const { amount, campaign_id } = await resolvePrice(plan as Plan);
 
     // Unique order ID — 'ord_' prefix + 32 hex chars.
     const orderId = `ord_${crypto.randomBytes(16).toString("hex")}`;
 
-    // Store our order record first (CREATED status).
+    // Store our order record first (CREATED status).  campaign_id records which
+    // pricing campaign set this amount; null when no campaign applied.
     await pool.query(
-      `INSERT INTO orders (order_id, user_id, plan, amount) VALUES ($1, $2, $3, $4)`,
-      [orderId, user.id, plan, amount],
+      `INSERT INTO orders (order_id, user_id, plan, amount, campaign_id) VALUES ($1, $2, $3, $4, $5)`,
+      [orderId, user.id, plan, amount, campaign_id],
     );
 
     // Create the order on Cashfree.
