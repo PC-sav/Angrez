@@ -8,10 +8,10 @@ import { env } from "../config/env";
 
 export type Plan = "trial" | "month" | "year";
 
-const PLAN_CONFIG: Record<Plan, { amount: number; dbPlan: string; durationDays: number }> = {
-  trial: { amount: 9,   dbPlan: "trial",   durationDays: 7   },
-  month: { amount: 99,  dbPlan: "monthly", durationDays: 30  },
-  year:  { amount: 799, dbPlan: "annual",  durationDays: 365 },
+const PLAN_CONFIG: Record<Plan, { amount: number; durationDays: number }> = {
+  trial: { amount: 9,   durationDays: 7   },
+  month: { amount: 99,  durationDays: 30  },
+  year:  { amount: 799, durationDays: 365 },
 };
 
 // month and year trigger the ₹5 referral payout; trial does not.
@@ -124,12 +124,12 @@ export async function applySubscription(
   userId: string,
   plan: Plan,
 ): Promise<void> {
-  const { dbPlan, durationDays } = PLAN_CONFIG[plan];
+  const { durationDays } = PLAN_CONFIG[plan];
   const periodEnd = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
   await pool.query(
     `INSERT INTO subscriptions (user_id, plan, status, started_at, renews_at)
      VALUES ($1, $2, 'active', now(), $3)`,
-    [userId, dbPlan, periodEnd],
+    [userId, plan, periodEnd],
   );
 }

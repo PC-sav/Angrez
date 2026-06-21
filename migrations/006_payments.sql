@@ -5,9 +5,8 @@
 -- plan/status/renews_at.  This migration adds only the orders table
 -- needed for server-authoritative payment tracking.
 --
--- orders.plan uses the client-facing IDs ('trial'|'month'|'year').
--- The webhook handler maps these to DB plan values before writing
--- to subscriptions ('trial'|'monthly'|'annual').
+-- orders.plan and subscriptions.plan both use the canonical IDs: trial | month | year.
+-- No translation layer — the plan written here is the same plan stored in subscriptions.
 --
 -- orders.amount is in major currency units (rupees), matching the
 -- Cashfree order_amount field (not paise).
