@@ -1,7 +1,7 @@
 import pool from "../lib/db";
 
 // Single config constant — change here to adjust the reward or make it double-sided.
-export const REFERRAL_REWARD_POINTS = 100;
+export const REFERRAL_REWARD_POINTS = 500;
 
 /**
  * Resolve a referral code to the referrer's user id.

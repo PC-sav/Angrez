@@ -182,9 +182,9 @@ Commits: `feat(wallet)` → `2af776f`, `feat(migration-004)` → `a8d62fc`, `fea
 
 | What | Detail |
 |------|--------|
-| `creditReferral(referrerId, refereeId)` | One `wallet_ledger` row (reason=`referral_credit`); idempotency_key=`referral:<r>:<e>`; flips `bonus_state → 'converted'`; `REFERRAL_REWARD_POINTS = 100` |
-| Call site | **NOT wired** — will be called only after a verified PayU ₹99 payment (later step) |
-| Tests (3) | one call → 1 row, 100 pts; two calls → 1 row (idempotent); self-referral → no row |
+| `creditReferral(referrerId, refereeId)` | One `wallet_ledger` row (reason=`referral_credit`); idempotency_key=`referral:<r>:<e>`; flips `bonus_state → 'converted'`; `REFERRAL_REWARD_POINTS = 500` |
+| Call site | Wired in Step 7 webhook handler — fires on verified month/year payment when referee has pending referral |
+| Tests (3) | one call → 1 row, 500 pts; two calls → 1 row (idempotent); self-referral → no row |
 | Status | ✅ 3/3 |
 
 **Out of scope (deferred):** PayU webhook + signature verification; the single `creditReferral` call site after verified ₹99 payment; any manual/admin "mark as paid" bypass.
