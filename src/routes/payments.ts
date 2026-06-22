@@ -15,7 +15,6 @@ import {
   type Plan,
 } from "../services/payments";
 import { creditReferral } from "../services/referrals";
-import { consumePricingQuota } from "../services/campaigns";
 
 const router = Router();
 
@@ -147,14 +146,13 @@ router.post("/webhook", async (req: Request, res: Response): Promise<void> => {
 
   // 4. Look up our order record.
   const orderRes = await pool.query<{
-    order_id:    string;
-    user_id:     string;
-    plan:        Plan;
-    amount:      number;
-    status:      string;
-    campaign_id: string | null;
+    order_id: string;
+    user_id:  string;
+    plan:     Plan;
+    amount:   number;
+    status:   string;
   }>(
-    `SELECT order_id, user_id, plan, amount, status, campaign_id FROM orders WHERE order_id = $1`,
+    `SELECT order_id, user_id, plan, amount, status FROM orders WHERE order_id = $1`,
     [orderId],
   );
 
@@ -192,41 +190,16 @@ router.post("/webhook", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  // 7. Idempotent transition CREATED → PAID + pricing-quota increment (atomic).
-  //    The WHERE status='CREATED' guard is the serialisation point: only the first
-  //    webhook delivery wins the UPDATE; any replay sees rowCount 0 and skips the
-  //    entire block — including the quota bump — so granted_count never double-counts.
-  const txClient = await pool.connect();
-  let didTransition = false;
-  try {
-    await txClient.query("BEGIN");
+  // 7. Idempotent transition CREATED → PAID.
+  //    Only one webhook wins this UPDATE; any replay sees rowCount 0 and skips.
+  const updated = await pool.query(
+    `UPDATE orders SET status = 'PAID', updated_at = now()
+     WHERE order_id = $1 AND status = 'CREATED'
+     RETURNING order_id`,
+    [orderId],
+  );
 
-    const updated = await txClient.query<{ order_id: string }>(
-      `UPDATE orders SET status = 'PAID', updated_at = now()
-       WHERE order_id = $1 AND status = 'CREATED'
-       RETURNING order_id`,
-      [orderId],
-    );
-
-    if ((updated.rowCount ?? 0) > 0) {
-      didTransition = true;
-      // Bump the pricing-campaign counter when this order was campaign-priced.
-      // consumePricingQuota silently no-ops if quota is already full — never
-      // blocks a payment that was already accepted at a campaign price.
-      if (dbOrder.campaign_id) {
-        await consumePricingQuota(dbOrder.campaign_id, txClient);
-      }
-    }
-
-    await txClient.query("COMMIT");
-  } catch (txErr) {
-    await txClient.query("ROLLBACK").catch(() => {});
-    txClient.release();
-    throw txErr;
-  }
-  txClient.release();
-
-  if (!didTransition) {
+  if ((updated.rowCount ?? 0) === 0) {
     // Already processed (duplicate webhook or concurrent retry).
     res.status(200).json({ received: true });
     return;

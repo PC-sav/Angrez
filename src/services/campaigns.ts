@@ -1,4 +1,3 @@
-import type { PoolClient } from "pg";
 import pool from "../lib/db";
 import { AppError } from "../lib/errors";
 
@@ -416,26 +415,4 @@ export async function runDailyFirstNHook(userId: string): Promise<void> {
       try { await claimCampaign(campaign.id, userId, userLevel); } catch {}
     }
   }
-}
-
-// ── 8. Pricing-quota consumption (9C webhook) ─────────────────────────────────
-// Called from the webhook's CREATED→PAID transition, inside the SAME transaction
-// that flips the order to PAID, so the count only moves when a payment actually
-// lands and is never double-counted on replay.
-//
-// Zero rows updated = quota already full or campaign not found.  That is NOT an
-// error: the customer's price was frozen at order-create time, so the payment
-// must succeed regardless.  We simply don't bump the counter.
-export async function consumePricingQuota(
-  campaignId: string,
-  client: PoolClient,
-): Promise<void> {
-  await client.query(
-    `UPDATE campaigns
-        SET granted_count = granted_count + 1
-      WHERE id = $1
-        AND type = 'early_bird_price'
-        AND (quota IS NULL OR granted_count < quota)`,
-    [campaignId],
-  );
 }
