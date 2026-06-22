@@ -7,6 +7,7 @@ import walletRouter from "./wallet";
 import campaignsRouter from "./campaigns";
 import paymentsRouter from "./payments";
 import subscriptionRouter from "./subscription";
+import founderRouter from "./founder";
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use("/wallet", walletRouter);
 router.use("/campaigns", campaignsRouter);
 router.use("/payments", paymentsRouter);
 router.use("/subscription", subscriptionRouter);
+router.use("/founder", founderRouter);
 router.use("/", learningRouter);
 
 export default router;
