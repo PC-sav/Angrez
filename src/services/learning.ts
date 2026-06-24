@@ -134,8 +134,69 @@ async function getUserLanguage(userId: string): Promise<string> {
 
 // ── 1. GET /plan/next ──────────────────────────────────────────────────────────
 
-export async function getNextPlan(userId: string) {
+export interface LockedPlan {
+  locked: true;
+  reason: "daily_limit";
+  limit: number;
+  used: number;
+  next_available_at: string;
+}
+
+export interface NextPlan {
+  locked?: false;
+  pack_id: string | null;
+  sub_stage_id: string;
+  title_en: string | undefined;
+  title_l1: string | undefined;
+  micro_skill_l1: string | undefined;
+  warmup: { audio?: string; [key: string]: unknown } | null;
+  teach: unknown[];
+  practice: PuzzleJson[];
+  status: string;
+  mastery_score: number;
+  review: Array<{ sub_stage_id: string; mastery_score: number }>;
+}
+
+export async function getNextPlan(userId: string): Promise<NextPlan | LockedPlan> {
   const language = await getUserLanguage(userId);
+
+  // ── Free-tier daily gate ───────────────────────────────────────────────────
+  // A user is free when they have no active, non-expired subscription row.
+  // Paid (trial/month/year active) → skip entirely, unlimited access.
+  const { rows: activeSub } = await pool.query<{ n: number }>(
+    `SELECT 1 AS n FROM subscriptions
+     WHERE user_id = $1 AND status = 'active'
+       AND (renews_at IS NULL OR renews_at > now())
+     LIMIT 1`,
+    [userId],
+  );
+
+  if (activeSub.length === 0) {
+    // Free user: count sub-stages completed today (UTC — matches daily_first_n precedent).
+    const { rows: countRows } = await pool.query<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM progress
+       WHERE user_id = $1 AND status = 'complete'
+         AND completed_at >= CURRENT_DATE`,
+      [userId],
+    );
+    const used = countRows[0].count;
+
+    if (used >= 1) {
+      // Next UTC midnight as ISO8601.
+      const tomorrow = new Date();
+      tomorrow.setUTCHours(0, 0, 0, 0);
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+      return {
+        locked:            true,
+        reason:            "daily_limit",
+        limit:             1,
+        used,
+        next_available_at: tomorrow.toISOString(),
+      };
+    }
+  }
+  // ── End daily gate ─────────────────────────────────────────────────────────
+
   const packs = await loadPacksForLanguage(language);
 
   if (packs.length === 0) {
@@ -428,12 +489,13 @@ export async function completeSubStage(userId: string, subStageId: string) {
     await progressClient.query("BEGIN");
 
     await progressClient.query(
-      `INSERT INTO progress (user_id, sub_stage_id, status, mastery_score)
-       VALUES ($1, $2, 'complete', $3)
+      `INSERT INTO progress (user_id, sub_stage_id, status, mastery_score, completed_at)
+       VALUES ($1, $2, 'complete', $3, now())
        ON CONFLICT (user_id, sub_stage_id) DO UPDATE SET
          status        = 'complete',
          mastery_score = EXCLUDED.mastery_score,
-         updated_at    = now()`,
+         updated_at    = now(),
+         completed_at  = COALESCE(progress.completed_at, now())`,
       [userId, subStageId, mastery * 100],
     );
 
