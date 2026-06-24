@@ -8,6 +8,7 @@ import campaignsRouter from "./campaigns";
 import paymentsRouter from "./payments";
 import subscriptionRouter from "./subscription";
 import founderRouter from "./founder";
+import plansRouter from "./plans";
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.use("/campaigns", campaignsRouter);
 router.use("/payments", paymentsRouter);
 router.use("/subscription", subscriptionRouter);
 router.use("/founder", founderRouter);
+router.use("/plans", plansRouter);
 router.use("/", learningRouter);
 
 export default router;
