@@ -81,6 +81,28 @@ router.post("/order", requireAuth, async (req: Request, res: Response): Promise<
   }
 });
 
+// ── GET /api/payments/order/:id ──────────────────────────────────────────────
+// Auth required.  Returns the raw orders.status for an order the caller owns.
+// 404 for both missing ids and other users' orders — no 403, so existence is not probeable.
+
+router.get("/order/:id", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { rows } = await pool.query<{ status: string }>(
+      `SELECT status FROM orders WHERE order_id = $1 AND user_id = $2`,
+      [req.params.id, req.user!.id],
+    );
+
+    if (!rows[0]) {
+      res.status(404).json({ error: "ORDER_NOT_FOUND" });
+      return;
+    }
+
+    res.json({ order_id: req.params.id, status: rows[0].status });
+  } catch (err) {
+    handleError(err, res);
+  }
+});
+
 // ── POST /api/payments/webhook ────────────────────────────────────────────────
 // NO auth — Cashfree signature IS the auth.
 //
