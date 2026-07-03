@@ -9,6 +9,7 @@ import paymentsRouter from "./payments";
 import subscriptionRouter from "./subscription";
 import founderRouter from "./founder";
 import plansRouter from "./plans";
+import referralRouter from "./referral";
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.use("/payments", paymentsRouter);
 router.use("/subscription", subscriptionRouter);
 router.use("/founder", founderRouter);
 router.use("/plans", plansRouter);
+router.use("/referral", referralRouter);
 router.use("/", learningRouter);
 
 export default router;
