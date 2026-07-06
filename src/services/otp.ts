@@ -80,6 +80,17 @@ async function assertNotRateLimited(phone: string): Promise<void> {
   }
 }
 
+// ── Test-phone allowlist ──────────────────────────────────────────────────────
+// Permanent test numbers + future Play Store reviewer. Inert unless BOTH
+// TEST_PHONE_ALLOWLIST and TEST_PHONE_OTP are set (see src/config/env.ts).
+
+const TEST_PHONE_ALLOWLIST = new Set(
+  env.testPhoneAllowlist
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean),
+);
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function requestOtp(
@@ -87,7 +98,8 @@ export async function requestOtp(
 ): Promise<{ devOtp?: string }> {
   await assertNotRateLimited(phone);
 
-  const code = generateCode(env.otpLength);
+  const isAllowlistedTestPhone = env.testPhoneOtp !== "" && TEST_PHONE_ALLOWLIST.has(phone);
+  const code = isAllowlistedTestPhone ? env.testPhoneOtp : generateCode(env.otpLength);
   const codeHash = await bcrypt.hash(code, BCRYPT_ROUNDS);
   const expiresAt = new Date(Date.now() + env.otpTtlSeconds * 1000);
 
@@ -95,6 +107,11 @@ export async function requestOtp(
     `INSERT INTO otp_codes (phone, code_hash, expires_at) VALUES ($1, $2, $3)`,
     [phone, codeHash, expiresAt],
   );
+
+  if (isAllowlistedTestPhone) {
+    console.log(`[otp] allowlisted test number, fixed code path used: ${phone}`);
+    return {};
+  }
 
   return sms.sendOtp(phone, code);
 }

@@ -50,6 +50,11 @@ export const env = {
   otpRateLimitWindowMinutes: parseInt(optional("OTP_RATE_LIMIT_WINDOW_MINUTES", "15"), 10),
   otpResendCooldownSeconds: parseInt(optional("OTP_RESEND_COOLDOWN_SECONDS", "30"), 10),
 
+  // Test-phone allowlist (permanent test numbers + future Play Store reviewer).
+  // Both optional() — if either is unset/empty the feature is inert.
+  testPhoneAllowlist: optional("TEST_PHONE_ALLOWLIST"),
+  testPhoneOtp: optional("TEST_PHONE_OTP"),
+
   // Cashfree Payments — all four are required at startup (Railway Variables)
   cashfreeClientId: required("CASHFREE_CLIENT_ID"),
   cashfreeClientSecret: required("CASHFREE_CLIENT_SECRET"),
