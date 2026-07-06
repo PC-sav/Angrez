@@ -50,7 +50,7 @@ GROUP BY user_id;
 Always read a user's balance from this view or the equivalent query. **Never store a balance column anywhere.**
 
 ### `subscriptions`
-One active subscription per user (enforced by the application, not a DB constraint). `plan` is one of `free | trial | monthly | annual`. `payu_ref` is the PayU transaction reference (populated in a later sprint).
+One active subscription per user (enforced by the application, not a DB constraint). `plan` is one of `free | trial | month | year` (canonicalised in 007_plan_vocab.sql). `payu_ref` is repurposed (010_play_billing.sql) as the idempotency/reference key for server-verified grants: the Google Play purchase token for GPB rows, NULL for Cashfree-sourced rows. Unique on `(user_id, payu_ref)`.
 
 ### `referrals`
 `referrer_id` is required; `referred_id` is null until the referred user signs up. `bonus_state` tracks the reward FSM: `pending → signup_rewarded → converted | void`. The conversion bonus logic is stubbed in Step 7.

@@ -11,6 +11,18 @@ function optional(key: string, fallback = ""): string {
   return v != null && v !== "" ? v : fallback;
 }
 
+// Fails fast in production only.  Dev/test environments (and unrelated test
+// suites that import env.ts transitively) aren't blocked before Block 0
+// (Play Console setup) has produced real values — mirrors how OTP_STUB_MODE
+// lets payment-adjacent config stay optional pre-launch.
+function requiredInProd(key: string): string {
+  const val = process.env[key];
+  if (!val && optional("NODE_ENV", "development") === "production") {
+    throw new Error(`Missing required env var: ${key} (required in production)`);
+  }
+  return val ?? "";
+}
+
 export const env = {
   nodeEnv: optional("NODE_ENV", "development"),
   port: parseInt(optional("PORT", "3000"), 10),
@@ -43,4 +55,10 @@ export const env = {
   cashfreeClientSecret: required("CASHFREE_CLIENT_SECRET"),
   cashfreeWebhookSecret: required("CASHFREE_WEBHOOK_SECRET"),
   cashfreeEnv: optional("CASHFREE_ENV", "sandbox") as "sandbox" | "prod",
+
+  // Google Play Billing (D1c) — service-account JSON is a single-line JSON
+  // string env var (no file path); parsed by the Play API client, not here.
+  googlePlayServiceAccountJson: requiredInProd("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"),
+  googlePlayPackageName: requiredInProd("GOOGLE_PLAY_PACKAGE_NAME"),
+  googlePlayPubsubAudience: requiredInProd("GOOGLE_PLAY_PUBSUB_AUDIENCE"),
 } as const;

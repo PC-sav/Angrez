@@ -10,6 +10,7 @@ import subscriptionRouter from "./subscription";
 import founderRouter from "./founder";
 import plansRouter from "./plans";
 import referralRouter from "./referral";
+import webhooksRouter from "./webhooks";
 
 const router = Router();
 
@@ -34,6 +35,7 @@ router.use("/subscription", subscriptionRouter);
 router.use("/founder", founderRouter);
 router.use("/plans", plansRouter);
 router.use("/referral", referralRouter);
+router.use("/webhooks", webhooksRouter);
 router.use("/", learningRouter);
 
 export default router;
