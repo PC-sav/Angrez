@@ -3,16 +3,19 @@ import { env } from "../config/env";
 import pool from "../lib/db";
 import type { Plan } from "./payments";
 
-// ── Product catalogue ─────────────────────────────────────────────────────────
-// Play Console product IDs (Block 0, P0.12). Must match exactly what's created
-// there — an unrecognised productId is a fail-closed no-write, not a guess.
-// 'trial' has no Play product: the ₹9 tier is an intro offer on the 'month'
-// plan (Play reports SUBSCRIPTION_STATE_ACTIVE with productId 'angrez_month'
-// either way).
+// ── Base plan catalogue ────────────────────────────────────────────────────────
+// Play Console base plan IDs (Block 0, P0.12) — NOT the top-level productId.
+// A single product (e.g. angrez_month) can carry more than one base plan —
+// angrez_month currently has a dead prepaid base plan literally named "monthly"
+// alongside the real "monthly-std" — so productId alone doesn't tell us which
+// plan the user actually bought. An unrecognised basePlanId is a fail-closed
+// no-write, not a guess. 'trial' has no Play product of its own: the ₹9 tier is
+// the 'intro-9' offer ON the 'monthly-std' base plan — map by base plan, not by
+// offer, since offerId identifies the discount, not the plan.
 
-const PRODUCT_ID_TO_PLAN: Record<string, Plan> = {
-  angrez_month: "month",
-  angrez_year: "year",
+const BASE_PLAN_ID_TO_PLAN: Record<string, Plan> = {
+  "monthly-std": "month",
+  "yearly": "year",
 };
 
 // ── SubscriptionsV2 state → our status vocabulary ─────────────────────────────
@@ -43,6 +46,10 @@ const NON_ACTIVE_STATUS: Record<string, string> = {
 export interface SubscriptionsV2LineItem {
   productId: string;
   expiryTime: string;
+  offerDetails?: {
+    basePlanId: string;
+    offerId?: string;
+  };
 }
 
 export interface SubscriptionsV2Response {
@@ -64,9 +71,14 @@ export function mapSubscriptionState(resp: SubscriptionsV2Response): MappingResu
     return { write: false, reason: "no line items in subscriptionsv2 response" };
   }
 
-  const plan = PRODUCT_ID_TO_PLAN[lineItem.productId];
+  const basePlanId = lineItem.offerDetails?.basePlanId;
+  if (!basePlanId) {
+    return { write: false, reason: "no offerDetails.basePlanId in lineItem" };
+  }
+
+  const plan = BASE_PLAN_ID_TO_PLAN[basePlanId];
   if (!plan) {
-    return { write: false, reason: `unknown productId: ${lineItem.productId}` };
+    return { write: false, reason: `unknown basePlanId: ${basePlanId}` };
   }
 
   // Mirrors Cashfree's CREATED orders: no subscriptions row until there's

@@ -23,12 +23,12 @@ import {
 
 function respWith(
   state: string,
-  productId = "angrez_month",
+  basePlanId = "monthly-std",
   expiryTime = "2026-08-06T00:00:00Z",
 ): SubscriptionsV2Response {
   return {
     subscriptionState: state,
-    lineItems: [{ productId, expiryTime }],
+    lineItems: [{ productId: "angrez_month", expiryTime, offerDetails: { basePlanId } }],
   };
 }
 
@@ -36,7 +36,7 @@ function respWith(
 // V3 — state-mapping function, pure, no I/O
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("V3 — mapSubscriptionState covers all seven states + unknown productId", () => {
+describe("V3 — mapSubscriptionState covers all seven states + unknown basePlanId", () => {
   it("SUBSCRIPTION_STATE_ACTIVE → write active", () => {
     const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_ACTIVE"));
     expect(r).toMatchObject({ write: true, status: "active", plan: "month" });
@@ -48,12 +48,12 @@ describe("V3 — mapSubscriptionState covers all seven states + unknown productI
   });
 
   it("SUBSCRIPTION_STATE_CANCELED → write active (auto-renew off, still inside paid period)", () => {
-    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_CANCELED", "angrez_year"));
+    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_CANCELED", "yearly"));
     expect(r).toMatchObject({ write: true, status: "active", plan: "year" });
   });
 
   it("SUBSCRIPTION_STATE_CANCELED still writes the real renews_at (EXPIRED does the actual cutoff, not this)", () => {
-    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_CANCELED", "angrez_year", "2026-09-15T00:00:00Z"));
+    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_CANCELED", "yearly", "2026-09-15T00:00:00Z"));
     expect(r.write).toBe(true);
     if (r.write) expect(r.renewsAt.toISOString()).toBe("2026-09-15T00:00:00.000Z");
   });
@@ -78,9 +78,24 @@ describe("V3 — mapSubscriptionState covers all seven states + unknown productI
     expect(r.write).toBe(false);
   });
 
-  it("unknown productId → no write, fail closed, even when state is ACTIVE", () => {
-    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_ACTIVE", "not_a_real_product"));
+  it("unknown basePlanId → no write, fail closed, even when state is ACTIVE", () => {
+    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_ACTIVE", "not_a_real_base_plan"));
     expect(r.write).toBe(false);
+  });
+
+  it("the dead 'monthly' prepaid base plan → no write, fail closed (must not be confused with monthly-std)", () => {
+    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_ACTIVE", "monthly"));
+    expect(r.write).toBe(false);
+    if (!r.write) expect(r.reason).toMatch(/^unknown basePlanId:/);
+  });
+
+  it("no offerDetails on the lineItem → no write, fail closed (productId alone is not enough)", () => {
+    const r = mapSubscriptionState({
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      lineItems: [{ productId: "angrez_month", expiryTime: "2026-08-06T00:00:00Z" }],
+    });
+    expect(r.write).toBe(false);
+    if (!r.write) expect(r.reason).toMatch(/^no offerDetails/);
   });
 
   it("unknown subscriptionState → no write, fail closed (never guesses 'inactive')", () => {
@@ -95,9 +110,21 @@ describe("V3 — mapSubscriptionState covers all seven states + unknown productI
   });
 
   it("renewsAt is derived from lineItems[0].expiryTime", () => {
-    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_ACTIVE", "angrez_month", "2027-01-01T00:00:00Z"));
+    const r = mapSubscriptionState(respWith("SUBSCRIPTION_STATE_ACTIVE", "monthly-std", "2027-01-01T00:00:00Z"));
     expect(r.write).toBe(true);
     if (r.write) expect(r.renewsAt.toISOString()).toBe("2027-01-01T00:00:00.000Z");
+  });
+
+  it("an intro-9 purchase (basePlanId monthly-std + offerId intro-9) maps by base plan, not offer", () => {
+    const r = mapSubscriptionState({
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      lineItems: [{
+        productId: "angrez_month",
+        expiryTime: "2026-08-06T00:00:00Z",
+        offerDetails: { basePlanId: "monthly-std", offerId: "intro-9" },
+      }],
+    });
+    expect(r).toMatchObject({ write: true, status: "active", plan: "month" });
   });
 });
 
