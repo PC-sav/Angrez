@@ -24,7 +24,7 @@
 import "dotenv/config";
 import { randomUUID, randomInt } from "crypto";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import pool from "../src/lib/db";
+import pool from "./support/testDb";
 import {
   claimCampaign,
   runFirstNSignupHook,

@@ -6,9 +6,17 @@
  *
  * Two pool strategies:
  *   testPool  — isolated pool (max:2, timeout:400ms) for fast unit-level checks.
- *   appPool   — the shared app pool used to verify the HTTP 503 mapping.
- *               Its connectionTimeoutMillis is temporarily lowered to 400ms for
- *               the HTTP test so we don't wait the full 5 s.
+ *   appPool   — the test-fenced pool (tests/support/testDb.ts), reads
+ *               TEST_DATABASE_URL. Its connectionTimeoutMillis is temporarily
+ *               lowered to 400ms for the HTTP test so we don't wait the full 5s.
+ *
+ * FENCE NOTE: `app` (src/app.ts) still wires its routes to the server's own
+ * pool (src/lib/db.ts → DATABASE_URL) — untouched per invariant 4. That pool is
+ * a DIFFERENT instance from `appPool` above. Manipulating `appPool`'s
+ * connectionTimeoutMillis no longer exhausts the connection the route handler
+ * itself uses, so the HTTP 503-mapping test below may no longer be exercising
+ * what it claims to (a pre-existing test's logic — flagged, not fixed, per
+ * this block's scope exclusions).
  */
 
 import "dotenv/config";
@@ -16,7 +24,7 @@ import { randomUUID, randomInt } from "crypto";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Pool } from "pg";
 import request from "supertest";
-import appPool from "../src/lib/db";
+import appPool from "./support/testDb";
 import app from "../src/app";
 import { signJwt } from "../src/services/jwt";
 import { isConnectionError } from "../src/lib/errors";
@@ -29,10 +37,10 @@ const TIMEOUT_MS = 400;
 // workers don't race on the initial TCP handshake. TIMEOUT_MS is applied
 // inside each test only for the queue-wait phase (after all slots are taken).
 const testPool = new Pool({
-  connectionString: process.env.DATABASE_URL!,
+  connectionString: process.env.TEST_DATABASE_URL!,
   max: 2,
   connectionTimeoutMillis: 5000,
-  ssl: process.env.DATABASE_URL!.includes("supabase.co")
+  ssl: process.env.TEST_DATABASE_URL!.includes("supabase.co")
     ? { rejectUnauthorized: false }
     : undefined,
 });

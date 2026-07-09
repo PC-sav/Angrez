@@ -12,7 +12,7 @@
 import "dotenv/config";
 import { randomUUID, randomInt } from "crypto";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import appPool from "../src/lib/db";
+import appPool from "./support/testDb";
 import {
   mapSubscriptionState,
   applyPlaySubscriptionWrite,

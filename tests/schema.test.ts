@@ -7,22 +7,28 @@
  * permanently written to the database. Expected failures are wrapped in
  * SAVEPOINTs so the connection stays usable after the error.
  *
- * Prerequisites: run `npm run migrate` against a real Supabase database
- * and make sure DATABASE_URL is set in .env.
+ * Prerequisites: run `npm run migrate` against the TEST database and make
+ * sure TEST_DATABASE_URL is set in .env.
+ *
+ * This file builds its own pg.Client (for per-test BEGIN/ROLLBACK) rather than
+ * sharing the pool in tests/support/testDb.ts — it still reads ONLY
+ * TEST_DATABASE_URL and calls assertTestDatabaseSafe() itself (invariant 1).
  */
 
 import "dotenv/config";
 import { describe, it, expect } from "vitest";
 import { Client } from "pg";
+import { assertTestDatabaseSafe } from "./support/fence";
 
-const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) throw new Error("DATABASE_URL is not set — check your .env");
+assertTestDatabaseSafe();
+
+const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL!;
 
 function makeClient(): Client {
-  const ssl = DATABASE_URL!.includes("supabase.co")
+  const ssl = TEST_DATABASE_URL.includes("supabase.co")
     ? { rejectUnauthorized: false }
     : undefined;
-  return new Client({ connectionString: DATABASE_URL, ssl });
+  return new Client({ connectionString: TEST_DATABASE_URL, ssl });
 }
 
 /**

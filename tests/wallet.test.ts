@@ -16,7 +16,7 @@ import { randomUUID, randomInt } from "crypto";
 import { readFileSync } from "fs";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
-import pool from "../src/lib/db";
+import pool from "./support/testDb";
 import app from "../src/app";
 import { signJwt } from "../src/services/jwt";
 

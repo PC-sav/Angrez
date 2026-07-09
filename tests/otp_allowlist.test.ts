@@ -15,7 +15,7 @@ import "dotenv/config";
 import { randomInt } from "crypto";
 import bcrypt from "bcrypt";
 import { describe, it, expect, afterEach, afterAll, vi } from "vitest";
-import appPool from "../src/lib/db";
+import appPool from "./support/testDb";
 
 const FIXED_OTP = "482913";
 const usedPhones: string[] = [];

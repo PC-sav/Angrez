@@ -13,7 +13,7 @@ import { randomUUID, randomInt } from "crypto";
 import { readFileSync } from "fs";
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import request from "supertest";
-import appPool from "../src/lib/db";
+import appPool from "./support/testDb";
 import * as learningService from "../src/services/learning";
 import app from "../src/app";
 import { signJwt } from "../src/services/jwt";
