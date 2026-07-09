@@ -10,13 +10,21 @@
  *               TEST_DATABASE_URL. Its connectionTimeoutMillis is temporarily
  *               lowered to 400ms for the HTTP test so we don't wait the full 5s.
  *
- * FENCE NOTE: `app` (src/app.ts) still wires its routes to the server's own
- * pool (src/lib/db.ts → DATABASE_URL) — untouched per invariant 4. That pool is
- * a DIFFERENT instance from `appPool` above. Manipulating `appPool`'s
- * connectionTimeoutMillis no longer exhausts the connection the route handler
- * itself uses, so the HTTP 503-mapping test below may no longer be exercising
- * what it claims to (a pre-existing test's logic — flagged, not fixed, per
- * this block's scope exclusions).
+ * FENCE NOTE (reassessed post fence-rider, tests/setupWorker.ts): `app`
+ * (src/app.ts) still wires its routes to the server's own pool (src/lib/db.ts
+ * → DATABASE_URL) — untouched per invariant 4. The rider reassigns
+ * process.env.DATABASE_URL = TEST_DATABASE_URL per worker, before src/lib/db.ts
+ * is ever imported, so that pool now resolves to the SAME DATABASE as
+ * `appPool` above — the critical "which DB gets written to" gap is closed.
+ *
+ * It is still NOT the same pool INSTANCE, though: `appPool` (tests/support/testDb.ts)
+ * and src/lib/db.ts's pool are two independent pg.Pool objects, each managing
+ * its own connection slots, that merely happen to point at the same database
+ * now. Manipulating `appPool`'s connectionTimeoutMillis / exhausting its `max`
+ * connections still does not touch the route handler's own pool's slots, so
+ * the HTTP 503-mapping test below may still not be exercising genuine
+ * exhaustion of the connection the route handler itself uses (a pre-existing
+ * test's logic — flagged, not fixed, per this block's scope exclusions).
  */
 
 import "dotenv/config";

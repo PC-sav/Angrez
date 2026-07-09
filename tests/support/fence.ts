@@ -28,7 +28,9 @@
  */
 
 // Confirmed 8 Jul via `.env` DATABASE_URL (host/ref only — never the password).
-const PROD_PROJECT_REF = "mgkqvrkalrdnvrvfjdus";
+// Exported so other test-side modules (e.g. the fence-rider canary) have a
+// single source of truth instead of re-hardcoding the literal.
+export const PROD_PROJECT_REF = "mgkqvrkalrdnvrvfjdus";
 
 interface ConnectionInfo {
   projectRef: string | null;
