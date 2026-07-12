@@ -19,6 +19,10 @@ import { assertTestDatabaseSafe } from "./support/fence";
 const PROD_POOLER_URL = "postgresql://postgres.mgkqvrkalrdnvrvfjdus:secret@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
 const PROD_DIRECT_URL = "postgresql://postgres:secret@db.mgkqvrkalrdnvrvfjdus.supabase.co:5432/postgres";
 const FOREIGN_POOLER_URL = "postgresql://postgres.someotherprojectref:secret@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
+// Same ref as FOREIGN_POOLER_URL ("someotherprojectref") via the OTHER
+// recognized shape (direct-connection) — a genuinely distinct string, not
+// the rider's exact-identity case.
+const FOREIGN_DIRECT_URL_SAME_REF = "postgresql://postgres:different-secret@db.someotherprojectref.supabase.co:5432/postgres";
 const LOCAL_URL = "postgresql://testuser:testpass@localhost:5432/angrez_test";
 const PROD_REF_OUTSIDE_RECOGNIZED_SHAPES_URL = "postgresql://user:pass@somehost:5432/mgkqvrkalrdnvrvfjdus";
 
@@ -97,6 +101,37 @@ describe("assertTestDatabaseSafe — deny check (a): same project ref as DATABAS
     vi.stubEnv("TEST_DATABASE_URL", LOCAL_URL);
     vi.stubEnv("DATABASE_URL", "");
     expect(() => assertTestDatabaseSafe()).not.toThrow();
+  });
+});
+
+describe("assertTestDatabaseSafe — rider-aware layer (a): exact-string identity with DATABASE_URL", () => {
+  // Regression coverage for the fence-rider false positive (12 Jul): the rider
+  // (tests/setupWorker.ts) reassigns process.env.DATABASE_URL =
+  // process.env.TEST_DATABASE_URL per worker, so every post-reassignment
+  // re-assertion (tests/support/testDb.ts, tests/schema.test.ts) sees the two
+  // vars as the IDENTICAL string. That identity is the rider's own doing, not
+  // a real prod pointer, and must not trip the fence on its own.
+
+  it("passes when TEST_DATABASE_URL and DATABASE_URL are the IDENTICAL non-prod string (the rider's own post-reassignment state)", () => {
+    vi.stubEnv("TEST_DATABASE_URL", FOREIGN_POOLER_URL);
+    vi.stubEnv("DATABASE_URL", FOREIGN_POOLER_URL);
+    expect(() => assertTestDatabaseSafe()).not.toThrow();
+  });
+
+  it("still refuses when TEST_DATABASE_URL and DATABASE_URL are DISTINCT strings that resolve to the same non-prod ref", () => {
+    vi.stubEnv("TEST_DATABASE_URL", FOREIGN_POOLER_URL);
+    vi.stubEnv("DATABASE_URL", FOREIGN_DIRECT_URL_SAME_REF);
+    expect(() => assertTestDatabaseSafe()).toThrow(
+      "FENCE: TEST_DATABASE_URL resolves to the same database as DATABASE_URL — refusing to run tests",
+    );
+  });
+
+  it("still refuses a prod-ref TEST_DATABASE_URL even when DATABASE_URL is the IDENTICAL string — layers 0/(b) fire before the identity short-circuit", () => {
+    vi.stubEnv("TEST_DATABASE_URL", PROD_REF_OUTSIDE_RECOGNIZED_SHAPES_URL);
+    vi.stubEnv("DATABASE_URL", PROD_REF_OUTSIDE_RECOGNIZED_SHAPES_URL);
+    expect(() => assertTestDatabaseSafe()).toThrow(
+      "FENCE: TEST_DATABASE_URL points at the production database — refusing to run tests",
+    );
   });
 });
 

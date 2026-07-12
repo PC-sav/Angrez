@@ -83,6 +83,17 @@ export function assertTestDatabaseSafe(): void {
   const prodUrl = process.env.DATABASE_URL;
   if (!prodUrl) return;
 
+  // Rider-aware short-circuit: the fence rider (tests/setupWorker.ts)
+  // reassigns process.env.DATABASE_URL = process.env.TEST_DATABASE_URL, per
+  // worker, before any test file's own imports run. Every re-assertion of this
+  // function AFTER that point (tests/support/testDb.ts, tests/schema.test.ts)
+  // therefore sees DATABASE_URL already equal to TEST_DATABASE_URL — that
+  // exact-string identity is the rider's own doing, not a real prod pointer.
+  // Layers 0 and (b) above have already proven testUrl is not prod; identity
+  // with a proven-non-prod value is benign. Layer (a) below still exists to
+  // catch a genuinely DISTINCT DATABASE_URL that happens to share prod's ref.
+  if (prodUrl === testUrl) return;
+
   let prodInfo: ConnectionInfo;
   try {
     prodInfo = parseConnectionInfo(prodUrl);
@@ -101,6 +112,13 @@ export function assertTestDatabaseSafe(): void {
       : testUrl === prodUrl;
 
   if (sameDatabase) {
-    throw new Error("FENCE: TEST_DATABASE_URL points at the production database — refusing to run tests");
+    // Deliberately distinct from layer (0)/(b)'s "points at the production
+    // database" message: this is DATABASE_URL sharing TEST_DATABASE_URL's
+    // resolved ref while being a DIFFERENT string — not necessarily prod
+    // itself, but not provably different from it either. Conflating the two
+    // messages was itself part of the original bug (misdiagnosis-bait).
+    throw new Error(
+      "FENCE: TEST_DATABASE_URL resolves to the same database as DATABASE_URL — refusing to run tests",
+    );
   }
 }
