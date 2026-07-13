@@ -6,7 +6,10 @@ import {
   fetchSubscriptionV2,
   mapSubscriptionState,
   applyPlaySubscriptionWrite,
+  decideAcknowledgement,
+  acknowledgeSubscriptionPurchase,
   PlayApiPermanentError,
+  PlayAckPermanentError,
 } from "../services/playBilling";
 
 const router = Router();
@@ -140,6 +143,57 @@ router.post("/play", async (req: Request, res: Response): Promise<void> => {
       status: mapping.status,
       renewsAt: mapping.renewsAt,
     });
+
+    // 6. Acknowledge — Block 1.1, server-side. Strictly AFTER the grant
+    // converges: never ack a purchase we didn't grant. State-driven off the
+    // SAME subResp already fetched above — zero extra API reads, no
+    // notification-type allowlist. Its own local try/catch, deliberately not
+    // routed through the outer catch's isConnectionError() check below (that
+    // heuristic doesn't reliably match a plain Play-API 5xx — see fetch-side
+    // comment; not fixed here, out of this block's scope): every ack failure
+    // that isn't a confirmed permanent 4xx defaults to transient.
+    const ackDecision = decideAcknowledgement(subResp.acknowledgementState);
+
+    if (ackDecision === "attempt") {
+      try {
+        await acknowledgeSubscriptionPurchase(sub.subscriptionId, sub.purchaseToken);
+        console.log("[webhooks/play] ack: acked", { tokenTail: purchaseTokenTail });
+      } catch (ackErr) {
+        if (ackErr instanceof PlayAckPermanentError) {
+          // Permanent rejection — retrying won't help. The grant already
+          // stands; ack Pub/Sub so it stops redelivering, but this needs a
+          // human: an un-acknowledgeable purchase auto-refunds at 72h
+          // regardless of the (successful) grant.
+          console.error(
+            "[webhooks/play] ack: CRITICAL — permanently rejected, grant stands, may auto-refund at 72h",
+            { status: ackErr.status, tokenTail: purchaseTokenTail },
+          );
+          res.status(200).json({ received: true });
+          return;
+        }
+        // Transient (5xx, network, auth) — do NOT ack Pub/Sub. Redelivery
+        // re-runs the whole handler: grant re-converges via ON CONFLICT
+        // (idempotent update, not a double-grant), ack re-attempts fresh.
+        console.error("[webhooks/play] ack: failed, will redeliver", {
+          tokenTail: purchaseTokenTail,
+          error: ackErr instanceof Error ? ackErr.message : String(ackErr),
+        });
+        res
+          .set("Retry-After", "5")
+          .status(503)
+          .json(errResponse("ACK_FAILED", "Acknowledgement failed, will retry."));
+        return;
+      }
+    } else if (ackDecision === "already-acknowledged") {
+      // Idempotent from our side too: the client may have acked already —
+      // both paths racing is normal, not an error.
+      console.log("[webhooks/play] ack: already-acked, skipping", { tokenTail: purchaseTokenTail });
+    } else {
+      console.warn("[webhooks/play] ack: skipped-not-required", {
+        tokenTail: purchaseTokenTail,
+        acknowledgementState: subResp.acknowledgementState,
+      });
+    }
 
     res.status(200).json({ received: true });
   } catch (err) {

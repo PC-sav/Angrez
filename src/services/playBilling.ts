@@ -56,6 +56,11 @@ export interface SubscriptionsV2Response {
   subscriptionState: string;
   lineItems: SubscriptionsV2LineItem[];
   externalAccountIdentifiers?: { obfuscatedExternalAccountId?: string };
+  // Top-level on the resource (confirmed against Google's current API docs,
+  // NOT per-lineItem) — already present in the same payload fetched for the
+  // grant, so reading it for Block 1.1's server-side ack is zero extra API
+  // reads. 'ACKNOWLEDGEMENT_STATE_PENDING' | 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED'.
+  acknowledgementState: string;
 }
 
 export type MappingResult =
@@ -99,6 +104,31 @@ export function mapSubscriptionState(resp: SubscriptionsV2Response): MappingResu
   }
 
   return { write: true, status: nonActiveStatus, plan, renewsAt: new Date(lineItem.expiryTime) };
+}
+
+// ── Server-side acknowledgement (Block 1.1) ───────────────────────────────────
+// Client-side ack alone has a hole: if the app closes between purchase and
+// ack, or a pending purchase resolves while the app is closed, no ack ever
+// fires — Google auto-refunds at 72h even though the webhook already granted
+// the subscription. This is a NEW step strictly AFTER a successful grant; it
+// never gates, replaces, or precedes the grant write.
+//
+// State-driven, no notification-type allowlist (approved deviation from an
+// earlier draft): acknowledgementState is read from the SAME subscriptionsv2
+// response already fetched for the grant — Google's own reported state is
+// ground truth for whether an ack is still owed, regardless of whether this
+// notification was a PURCHASED, RENEWED, or RECOVERED event.
+
+export type AckDecision = "attempt" | "already-acknowledged" | "not-required";
+
+// Pure — no I/O. Missing/unrecognised acknowledgementState (should not occur
+// against the documented API, but never guessed at) resolves to "not-required":
+// skip the ack call rather than risk one against an uncertain state, since
+// retrying it would just see the same uncertain value again.
+export function decideAcknowledgement(acknowledgementState: string | undefined): AckDecision {
+  if (acknowledgementState === "ACKNOWLEDGEMENT_STATE_PENDING") return "attempt";
+  if (acknowledgementState === "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED") return "already-acknowledged";
+  return "not-required";
 }
 
 // ── Idempotent write ───────────────────────────────────────────────────────────
@@ -181,6 +211,81 @@ export async function fetchSubscriptionV2(purchaseToken: string): Promise<Subscr
   }
 
   return (await resp.json()) as SubscriptionsV2Response;
+}
+
+// ── Server-side acknowledgement call ──────────────────────────────────────────
+// No purchases.subscriptionsv2.acknowledge exists (confirmed against Google's
+// current API docs) — acknowledgement is still only on the older v1-shaped
+// resource: purchases.subscriptions.acknowledge. Same bearer-token pattern as
+// fetchSubscriptionV2, no `googleapis` dependency. subscriptionId is the
+// notification's `subscriptionNotification.subscriptionId` (Google's name for
+// what we call productId, e.g. "angrez_month") — marked optional/"not
+// recommended" by Google since May 2025 only for subscriptions WITH add-ons;
+// we have none, so it's still passed.
+
+export class PlayAckPermanentError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "PlayAckPermanentError";
+  }
+}
+
+// Pure — no I/O. Mirrors classifyPlayApiFailure's 4xx/5xx split for the ack
+// call, with one addition: a 4xx whose body indicates the purchase was
+// already acknowledged is success (null), not failure — idempotent ack, since
+// the client's own finishTransaction() may have raced us to it.
+//
+// FLAGGED (per design review): Google does not publish a stable
+// machine-readable error code for "already acknowledged" on this endpoint —
+// detection is a best-effort case-insensitive substring match. Confirm at the
+// live G2 gate against a real client/server ack race.
+//
+// Classification lean for a confirmed non-already-acked 4xx vs 5xx/other:
+//   4xx (not already-acked) → PERMANENT. Retrying won't change a rejected
+//     request. The grant already stands (this only runs after a successful
+//     write) — thrown as PlayAckPermanentError so the route ACKS Pub/Sub
+//     (redelivery can't fix a permanent rejection, same reasoning
+//     classifyPlayApiFailure applies on the fetch side) but logs CRITICAL:
+//     an un-acknowledgeable purchase auto-refunds at 72h regardless.
+//   5xx / anything else (including a thrown network exception, which never
+//     reaches this function at all and is caught as-is by the route) →
+//     TRANSIENT by default. This is the safer lean for an ambiguous failure:
+//     the route does NOT ack Pub/Sub, so redelivery retries the whole
+//     grant+ack pair (grant re-converges via ON CONFLICT, ack re-attempts).
+export function classifyAckFailure(status: number, body: string): Error | null {
+  if (status >= 200 && status < 300) return null;
+
+  if (status >= 400 && status < 500) {
+    if (/already.*acknowledg/i.test(body)) return null;
+    return new PlayAckPermanentError(status, `Play acknowledge failed (${status}): ${body}`);
+  }
+
+  return new Error(`Play acknowledge failed (${status}): ${body}`);
+}
+
+export async function acknowledgeSubscriptionPurchase(
+  subscriptionId: string,
+  purchaseToken: string,
+): Promise<void> {
+  const client = await getGoogleAuth().getClient();
+  const { token } = await client.getAccessToken();
+
+  const url =
+    `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/` +
+    `${env.googlePlayPackageName}/purchases/subscriptions/${encodeURIComponent(subscriptionId)}` +
+    `/tokens/${encodeURIComponent(purchaseToken)}:acknowledge`;
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({}),
+  });
+
+  const err = classifyAckFailure(resp.status, resp.ok ? "" : await resp.text());
+  if (err) throw err;
 }
 
 // ── Pub/Sub push authentication ───────────────────────────────────────────────

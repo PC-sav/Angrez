@@ -17,7 +17,10 @@ import {
   mapSubscriptionState,
   applyPlaySubscriptionWrite,
   classifyPlayApiFailure,
+  decideAcknowledgement,
+  classifyAckFailure,
   PlayApiPermanentError,
+  PlayAckPermanentError,
   type SubscriptionsV2Response,
 } from "../src/services/playBilling";
 
@@ -29,6 +32,10 @@ function respWith(
   return {
     subscriptionState: state,
     lineItems: [{ productId: "angrez_month", expiryTime, offerDetails: { basePlanId } }],
+    // Not exercised by mapSubscriptionState (Block 1.1's ack step reads it
+    // separately, on the route's own subResp) — defaulted here purely to
+    // keep this fixture honest to the real (now-required) response shape.
+    acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
   };
 }
 
@@ -250,5 +257,66 @@ describe("classifyPlayApiFailure — 4xx permanent vs 5xx/network transient", ()
   it("503 → plain Error, not PlayApiPermanentError", () => {
     const err = classifyPlayApiFailure(503, "unavailable");
     expect(err).not.toBeInstanceOf(PlayApiPermanentError);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Block 1.1 — server-side acknowledgement on grant. Pure-function seams only
+// (decideAcknowledgement, classifyAckFailure), same convention as above: the
+// authorized HTTP call and route-level ordering stay live-gated, not mocked.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("decideAcknowledgement — state-driven, no notification-type allowlist", () => {
+  it("ACKNOWLEDGEMENT_STATE_PENDING → attempt", () => {
+    expect(decideAcknowledgement("ACKNOWLEDGEMENT_STATE_PENDING")).toBe("attempt");
+  });
+
+  it("ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED → already-acknowledged", () => {
+    expect(decideAcknowledgement("ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED")).toBe("already-acknowledged");
+  });
+
+  it("undefined (missing field) → not-required, never guessed", () => {
+    expect(decideAcknowledgement(undefined)).toBe("not-required");
+  });
+
+  it("an unrecognised value → not-required, fail closed on the ack side too", () => {
+    expect(decideAcknowledgement("ACKNOWLEDGEMENT_STATE_SOME_FUTURE_VALUE")).toBe("not-required");
+  });
+});
+
+describe("classifyAckFailure — 4xx permanent (ack Pub/Sub, CRITICAL log) vs 5xx transient (redeliver), with already-acked as success", () => {
+  it("2xx → null (success)", () => {
+    expect(classifyAckFailure(200, "")).toBeNull();
+  });
+
+  it("400 with an 'already acknowledged'-shaped body → null (idempotent success, not failure)", () => {
+    expect(classifyAckFailure(400, "The subscription purchase is already acknowledged.")).toBeNull();
+  });
+
+  it("400 with an 'already acknowledged'-shaped body is case-insensitive", () => {
+    expect(classifyAckFailure(400, "ALREADY ACKNOWLEDGED")).toBeNull();
+  });
+
+  it("404 (unknown token) → PlayAckPermanentError, not already-acked", () => {
+    const err = classifyAckFailure(404, "purchase token not found");
+    expect(err).toBeInstanceOf(PlayAckPermanentError);
+    expect((err as PlayAckPermanentError).status).toBe(404);
+  });
+
+  it("400 (malformed request, not already-acked) → PlayAckPermanentError", () => {
+    const err = classifyAckFailure(400, "invalid subscriptionId");
+    expect(err).toBeInstanceOf(PlayAckPermanentError);
+  });
+
+  it("500 → plain Error, not PlayAckPermanentError (transient — route should NOT ack Pub/Sub)", () => {
+    const err = classifyAckFailure(500, "internal error");
+    expect(err).not.toBeInstanceOf(PlayAckPermanentError);
+    expect(err).toBeInstanceOf(Error);
+  });
+
+  it("503 → plain Error, not PlayAckPermanentError", () => {
+    const err = classifyAckFailure(503, "unavailable");
+    expect(err).not.toBeInstanceOf(PlayAckPermanentError);
+    expect(err).toBeInstanceOf(Error);
   });
 });
