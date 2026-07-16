@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { version } from "../../package.json";
+import pool from "../lib/db";
 import authRouter from "./auth";
 import contentRouter from "./content";
 import learningRouter from "./learning";
@@ -16,13 +17,22 @@ const router = Router();
 
 const startedAt = Date.now();
 
-router.get("/health", (_req: Request, res: Response) => {
-  res.json({
-    status: "ok",
+router.get("/health", async (_req: Request, res: Response) => {
+  let db: "ok" | "unreachable" = "ok";
+  try {
+    await pool.query("SELECT 1");
+  } catch (err) {
+    console.error("[health] DB check failed:", err);
+    db = "unreachable";
+  }
+
+  res.status(db === "ok" ? 200 : 503).json({
+    status: db === "ok" ? "ok" : "degraded",
     version,
     env: process.env.NODE_ENV ?? "development",
     uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
     timestamp: new Date().toISOString(),
+    db,
   });
 });
 

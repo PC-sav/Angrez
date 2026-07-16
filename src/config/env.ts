@@ -55,6 +55,17 @@ export const env = {
   testPhoneAllowlist: optional("TEST_PHONE_ALLOWLIST"),
   testPhoneOtp: optional("TEST_PHONE_OTP"),
 
+  // Exotel SMS (OTP delivery) — bare optional(); ExotelSmsProvider validates
+  // presence itself at construction time and fails loud, naming what's missing.
+  exotelApiKey: optional("EXOTEL_API_KEY"),
+  exotelApiToken: optional("EXOTEL_API_TOKEN"),
+  exotelSid: optional("EXOTEL_SID"),
+  exotelSubdomain: optional("EXOTEL_SUBDOMAIN"),
+  exotelSenderId: optional("EXOTEL_SENDER_ID"),
+  exotelDltEntityId: optional("EXOTEL_DLT_ENTITY_ID"),
+  exotelDltTemplateId: optional("EXOTEL_DLT_TEMPLATE_ID"),
+  otpSmsTemplate: optional("OTP_SMS_TEMPLATE"),
+
   // Cashfree Payments — all four are required at startup (Railway Variables)
   cashfreeClientId: required("CASHFREE_CLIENT_ID"),
   cashfreeClientSecret: required("CASHFREE_CLIENT_SECRET"),
